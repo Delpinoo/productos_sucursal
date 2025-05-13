@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Formulario de Venta</title>
+</head>
+<body>
+    <h1>Realizar Venta</h1>
+    <form method="POST" action="/venta">
+        <div>
+            <label for="id_sucursal">ID de Sucursal:</label>
+            <input type="number" id="id_sucursal" name="id_sucursal" required><br><br>
+        </div>
+        <div>
+            <h2>Productos a Vender:</h2>
+            <div id="productos-container">
+                <div class="producto">
+                    <label for="id_producto_0">ID Producto:</label>
+                    <input type="number" name="productos[0][id_producto]" required>
+                    <label for="cantidad_0">Cantidad:</label>
+                    <input type="number" name="productos[0][cantidad]" value="1" required>
+                </div>
+            </div>
+            <button type="button" onclick="agregarProducto()">Agregar Otro Producto</button>
+        </div>
+        <br>
+        <button type="submit">Registrar Venta</button>
+    </form>
+
+    <script>
+        let contadorProductos = 1;
+        function agregarProducto() {
+            const container = document.getElementById('productos-container');
+            const nuevoProducto = document.createElement('div');
+            nuevoProducto.classList.add('producto');
+            nuevoProducto.innerHTML = `
+                <label for="id_producto_${contadorProductos}">ID Producto:</label>
+                <input type="number" name="productos[${contadorProductos}][id_producto]" required>
+                <label for="cantidad_${contadorProductos}">Cantidad:</label>
+                <input type="number" name="productos[${contadorProductos}][cantidad]" value="1" required>
+            `;
+            container.appendChild(nuevoProducto);
+            contadorProductos++;
+        }
+    </script>
+    <p><a href="/">Volver</a></p>
+</body>
+</html>

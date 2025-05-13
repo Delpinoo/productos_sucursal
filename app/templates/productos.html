@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Productos</title>
+</head>
+<body>
+    <h1>Lista de Productos</h1>
+    <ul>
+        {% for producto in productos %}
+            <li>ID: {{ producto[0] }}, Nombre: {{ producto[1] }}, Descripción: {{ producto[2] }}</li>
+        {% endfor %}
+    </ul>
+    <p><a href="/">Volver</a></p>
+</body>
+</html>

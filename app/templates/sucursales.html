@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Sucursales</title>
+</head>
+<body>
+    <h1>Lista de Sucursales</h1>
+    <ul>
+        {% for sucursal in sucursales %}
+            <li>ID: {{ sucursal[0] }}, Nombre: {{ sucursal[1] }}</li>
+        {% endfor %}
+    </ul>
+    <p><a href="/">Volver</a></p>
+</body>
+</html>
