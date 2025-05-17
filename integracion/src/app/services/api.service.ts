@@ -7,7 +7,7 @@ import { ProductoConStock } from '../interface/producto-con-stock';
   providedIn: 'root',
 })
 export class ApiService {
-  private apiUrl = '/api';
+  private apiUrl = 'http://localhost:5000/';
 
   constructor(private http: HttpClient) {}
 

@@ -48,38 +48,51 @@ def get_sucursales():
     return render_template('sucursales.html', sucursales=sucursales)
 
 
-@app.route('/productos', methods=['GET'])
-def get_productos():
-    print("¡Se ha recibido una petición a /productos!")  # Añade este log
+@app.route('/productos/stock', methods=['GET'])
+def get_productos_con_stock():
+    termino = request.args.get('termino')
     conn = get_db_connection()
     if conn:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, descripcion FROM productos")
-        productos = cur.fetchall()
+        if termino:
+            cur.execute("""
+                SELECT p.id, p.nombre, p.descripcion, s.id_sucursal, su.nombre as nombre_sucursal, s.cantidad, s.precio
+                FROM productos p
+                LEFT JOIN stock s ON p.id = s.id_producto
+                LEFT JOIN sucursales su ON s.id_sucursal = su.id
+                WHERE LOWER(p.nombre) LIKE %s
+            """, ('%' + termino.lower() + '%',))
+            resultados = cur.fetchall()
+        else:
+            cur.execute("""
+                SELECT p.id, p.nombre, p.descripcion, s.id_sucursal, su.nombre as nombre_sucursal, s.cantidad, s.precio
+                FROM productos p
+                LEFT JOIN stock s ON p.id = s.id_producto
+                LEFT JOIN sucursales su ON s.id_sucursal = su.id
+            """)
+            resultados = cur.fetchall()
         cur.close()
         conn.close()
-        producto_lista = [{'id': p[0], 'nombre': p[1], 'descripcion': p[2]} for p in productos]
-        print("Productos devueltos:", producto_lista)  # Añade este log
-        return jsonify(producto_lista)
-    print("Error al conectar a la base de datos")  # Añade este log
-    return jsonify({'error': 'No se pudo conectar a la base de datos'}), 500
 
-@app.route('/stock/<int:id_sucursal>', methods=['GET'])
-def get_stock_por_sucursal(id_sucursal):
-    conn = get_db_connection()
-    if conn:
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT s.id_producto, p.nombre, s.cantidad, s.precio
-            FROM stock s
-            JOIN productos p ON s.id_producto = p.id
-            WHERE s.id_sucursal = %s
-        """, (id_sucursal,))
-        stock_data = cur.fetchall()
-        cur.close()
-        conn.close()
-        stock_lista = [{'producto_id': item[0], 'nombre': item[1], 'cantidad': item[2], 'precio': item[3]} for item in stock_data]
-        return jsonify(stock_lista)
+        productos_con_stock = {}
+        for resultado in resultados:
+            id_producto, nombre_producto, descripcion_producto, id_sucursal, nombre_sucursal, cantidad, precio = resultado
+            if id_producto not in productos_con_stock:
+                productos_con_stock[id_producto] = {
+                    'id': id_producto,
+                    'nombre': nombre_producto,
+                    'descripcion': descripcion_producto,
+                    'stockPorSucursal': []
+                }
+            if id_sucursal:
+                productos_con_stock[id_producto]['stockPorSucursal'].append({
+                    'idSucursal': id_sucursal,
+                    'nombreSucursal': nombre_sucursal,
+                    'cantidad': cantidad,
+                    'precio': precio
+                })
+
+        return jsonify(list(productos_con_stock.values()))
     return jsonify({'error': 'No se pudo conectar a la base de datos'}), 500
 
 @app.route('/venta', methods=['GET', 'POST'])
