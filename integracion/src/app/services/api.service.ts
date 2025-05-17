@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ProductoConStock } from '../interface/producto-con-stock';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
-  private apiUrl = 'http://127.0.0.1:5000';
+  private apiUrl = '/api';
 
   constructor(private http: HttpClient) {}
 
@@ -14,5 +15,13 @@ export class ApiService {
     return this.http.get<any[]>(`${this.apiUrl}/productos`);
   }
 
+  buscarProductos(termino: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/buscar-productos?query=${termino}`);
+  }
+
+    buscarProductosConStock(termino: string): Observable<ProductoConStock[]> {
+    const params = new HttpParams().set('termino', termino);
+    return this.http.get<ProductoConStock[]>(`${this.apiUrl}/productos/stock`, { params });
+  }
 
 }

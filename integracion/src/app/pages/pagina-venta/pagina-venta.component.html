@@ -1,0 +1,16 @@
+<div class="pagina-venta-container">
+  <app-buscador (terminoBusqueda)="buscarProducto($event)"></app-buscador>
+
+  <div class="stock-y-detalle">
+    <app-lista-sucursales
+      [productos]="productosFiltrados" (sucursalSeleccionada)="mostrarDetalle($event)"
+    ></app-lista-sucursales>
+
+    <app-detalle-producto [sucursal]="sucursalSeleccionada"></app-detalle-producto>
+  </div>
+
+<app-formulario-venta
+  [productos]="productosFiltrados"
+  [sucursal]="sucursalSeleccionada"
+></app-formulario-venta>
+</div>
