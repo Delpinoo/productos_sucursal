@@ -6,12 +6,13 @@ import { PaginaVentaComponent } from './pages/pagina-venta/pagina-venta.componen
 
 const routes: Routes = [
 
-  {path: '', component: ListaProductosComponent},
-  {path: 'pagina-venta', component: PaginaVentaComponent}
+  {path: '', component: PaginaVentaComponent},
+  {path: 'lista-producto', component: ListaProductosComponent},
+
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes), HttpClientModule ],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}
