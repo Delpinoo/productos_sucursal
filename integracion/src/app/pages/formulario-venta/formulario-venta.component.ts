@@ -1,11 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, Input  } from '@angular/core';
 
 @Component({
   selector: 'app-formulario-venta',
-  standalone: false,
+  standalone: true,
   templateUrl: './formulario-venta.component.html',
   styleUrl: './formulario-venta.component.css'
 })
 export class FormularioVentaComponent {
+@Input() productos: any[] = []; // ¡Esta es la propiedad que falta o tiene un nombre diferente!
+@Input() sucursal: any; // Probablemente también necesites la sucursal
 
 }

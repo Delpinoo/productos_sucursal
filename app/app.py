@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, render_template
+from flask_cors import CORS
 import psycopg2
 import os
 from urllib.parse import urlparse
@@ -7,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__, template_folder='templates')
+CORS(app)
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
@@ -45,8 +47,10 @@ def get_sucursales():
         conn.close()
     return render_template('sucursales.html', sucursales=sucursales)
 
+
 @app.route('/productos', methods=['GET'])
 def get_productos():
+    print("¡Se ha recibido una petición a /productos!")  # Añade este log
     conn = get_db_connection()
     if conn:
         cur = conn.cursor()
@@ -55,7 +59,9 @@ def get_productos():
         cur.close()
         conn.close()
         producto_lista = [{'id': p[0], 'nombre': p[1], 'descripcion': p[2]} for p in productos]
+        print("Productos devueltos:", producto_lista)  # Añade este log
         return jsonify(producto_lista)
+    print("Error al conectar a la base de datos")  # Añade este log
     return jsonify({'error': 'No se pudo conectar a la base de datos'}), 500
 
 @app.route('/stock/<int:id_sucursal>', methods=['GET'])
@@ -181,18 +187,6 @@ def listar_sucursales():
         cur.close()
         conn.close()
     return render_template('sucursales.html', sucursales=sucursales)
-
-@app.route('/productos')
-def listar_productos():
-    conn = get_db_connection()
-    productos = []
-    if conn:
-        cur = conn.cursor()
-        cur.execute("SELECT id, nombre, descripcion FROM productos")
-        productos = cur.fetchall()
-        cur.close()
-        conn.close()
-    return render_template('productos.html', productos=productos)
 
 if __name__ == '__main__':
     app.run(debug=True)

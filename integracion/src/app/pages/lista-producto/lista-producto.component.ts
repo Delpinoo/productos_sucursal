@@ -18,6 +18,7 @@ export class ListaProductosComponent implements OnInit {
       (data) => {
         this.productos = data; // Asigna los datos de la API a la propiedad productos
         console.log('Productos recibidos:', data); // Para depurar: verifica los datos recibidos
+        console.log('this.productos después de la asignación:', this.productos);
       },
       (error) => {
         console.error('Error al obtener productos:', error); // Maneja los errores

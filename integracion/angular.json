@@ -72,7 +72,8 @@
               "buildTarget": "integracion:build:production"
             },
             "development": {
-              "buildTarget": "integracion:build:development"
+              "buildTarget": "integracion:build:development",
+              "proxyConfig": "proxy.config.json"
             }
           },
           "defaultConfiguration": "development"
@@ -102,5 +103,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

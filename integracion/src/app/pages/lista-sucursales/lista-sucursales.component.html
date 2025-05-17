@@ -1,0 +1,13 @@
+<h2>Productos Encontrados</h2>
+<div *ngFor="let producto of productos">
+  <h3>{{ producto.nombre }}</h3>
+  <p *ngIf="producto.descripcion">{{ producto.descripcion }}</p>
+  <h4>Stock por Sucursal:</h4>
+  <ul *ngFor="let stock of producto.stockPorSucursal">
+    <li>
+      Sucursal: {{ stock.nombreSucursal }} - Cantidad: {{ stock.cantidad }} - Precio: ${{ stock.precio }}
+    </li>
+  </ul>
+  <hr>
+</div>
+<p *ngIf="productos.length === 0">No se encontraron productos.</p>
