@@ -8,6 +8,26 @@
       Sucursal: {{ stock.nombreSucursal }} - Cantidad: {{ stock.cantidad }} - Precio: ${{ stock.precio }}
     </li>
   </ul>
+
+
+   <div>
+    <hr>
+    <label for="sucursalCompra{{ producto.id }}">Comprar en:</label>
+    <select id="sucursalCompra{{ producto.id }}" (change)="seleccionarSucursal(producto.id, $event)">
+      <option value="">Seleccionar Sucursal</option>
+      <option *ngFor="let stock of producto.stockPorSucursal" [value]="stock.idSucursal">
+        {{ stock.nombreSucursal }}
+      </option>
+    </select>
+  </div>
+  <hr>
+
+    <div *ngIf="sucursalSeleccionada[producto.id]">
+    <label for="cantidadCompra{{ producto.id }}">Cantidad a comprar:</label>
+    <input type="number" id="cantidadCompra{{ producto.id }}" [(ngModel)]="cantidadAComprar[producto.id]" min="1">
+    <button (click)="calcularPrecioCLP(producto)">Calcular</button>
+    <p *ngIf="precioEnCLP[producto.id]">Precio en CLP: {{ precioEnCLP[producto.id] | currency:'CLP':'symbol':'1.2-2' }}</p>
+  </div>
   <hr>
 </div>
 <p *ngIf="productos.length === 0">No se encontraron productos.</p>
