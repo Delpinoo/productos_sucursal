@@ -1,18 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common'; // ¡Importa NgFor!
 
-interface ProductoParaLista {
-  id: number;
-  nombre: string;
-  descripcion?: string;
-  stockPorSucursal: {
-    idSucursal: number;
-    nombreSucursal: string;
-    cantidad: number;
-    precio: number;
-  }[];
-}
-
 @Component({
   selector: 'app-lista-sucursales',
   standalone: true,
