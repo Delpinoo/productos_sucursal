@@ -15,16 +15,23 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 def get_db_connection():
     conn = None
     try:
-        if DATABASE_URL:
-            result = urlparse(DATABASE_URL)
-            username = result.username
-            password = result.password
-            database = result.path[1:]
-            hostname = result.hostname
-            port = result.port
-            conn = psycopg2.connect(host=hostname, database=database, user=username, password=password, port=port)
-        else:
-            print("La variable de entorno DATABASE_URL no está configurada.")
+        hostname = os.environ.get('DB_HOST')  # Leer variables individuales
+        database = os.environ.get('DB_NAME')
+        username = os.environ.get('DB_USER')
+        password = os.environ.get('DB_PASSWORD')
+        port = os.environ.get('DB_PORT', '5432')  # Valor por defecto para el puerto
+
+        if not all([hostname, database, username, password]):
+            print("Error: Faltan variables de entorno de la base de datos.")
+            return None
+
+        conn = psycopg2.connect(
+            host=hostname,
+            database=database,
+            user=username,
+            password=password,
+            port=port
+        )
     except psycopg2.Error as e:
         print(f"Error al conectar a la base de datos: {e}")
     return conn
@@ -196,4 +203,10 @@ def listar_sucursales():
     return render_template('sucursales.html', sucursales=sucursales)
 
 if __name__ == '__main__':
+    #seteo de variables de entorno
+    os.environ['DB_HOST'] = 'localhost'
+    os.environ['DB_NAME'] = 'bbdd_producto_sucursal'
+    os.environ['DB_USER'] = 'postgres'
+    os.environ['DB_PASSWORD'] = 'system'
+    os.environ['DB_PORT'] = '5432'
     app.run(debug=True)
