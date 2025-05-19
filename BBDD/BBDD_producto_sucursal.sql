@@ -109,7 +109,11 @@ INSERT INTO stock (id_sucursal, id_producto, cantidad, precio) VALUES
 (5, 4, 38, 46.50),
 (5, 5, 22, 71.10);
 
--- Puedes verificar que se insertó el stock con:
--- SELECT * FROM stock;
+INSERT INTO stock (id_sucursal, id_producto, cantidad, precio) VALUES
+(6, 1, 100, 1220.75),
+(6, 2, 228, 255.00),
+(6, 3, 189, 82.90),
+(6, 4, 380, 46.50),
+(6, 5, 2, 71.10);
 
 
