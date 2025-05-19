@@ -35,7 +35,7 @@ export class ListaSucursalesComponent implements OnInit {
 
   actualizarCantidadAComprar(productoId: number, event: any): void {
     this.cantidadAComprar[productoId] = parseInt(event.target.value, 10) || 1;
-    this.precioEnCLP[productoId] = 0; // Asigna null // Asigna null
+    this.precioEnCLP[productoId] = 0;
 
   }
 
@@ -47,7 +47,7 @@ export class ListaSucursalesComponent implements OnInit {
       const precioUSD = producto.stockPorSucursal.find(stock => stock.idSucursal === sucursalId)?.precio;
 
       if (precioUSD !== undefined) {
-        const apiKey = '0fb1bdc55aa4225aceae3b5a'; // ¡Asegúrate de usar tu API key real!
+        const apiKey = '0fb1bdc55aa4225aceae3b5a'; 
         const url = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/USD`;
 
         this.http.get<any>(url).subscribe(
@@ -94,10 +94,8 @@ export class ListaSucursalesComponent implements OnInit {
         }
 
         if (cantidadAComprar <= stockDisponible) {
-          // Descontar el stock (simulación en el frontend)
           producto.stockPorSucursal[sucursalIndex].cantidad -= cantidadAComprar;
           alert(`Venta exitosa de ${cantidadAComprar} unidades de ${producto.nombre} en ${producto.stockPorSucursal[sucursalIndex].nombreSucursal}.`);
-          // Llamada al backend para registrar la venta (tu lógica aquí)
           this.resetearEstadoVenta(producto.id);
         } else {
           alert(

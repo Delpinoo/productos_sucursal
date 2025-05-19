@@ -7,7 +7,7 @@ import { Component, Input  } from '@angular/core';
   styleUrl: './formulario-venta.component.css'
 })
 export class FormularioVentaComponent {
-@Input() productos: any[] = []; // ¡Esta es la propiedad que falta o tiene un nombre diferente!
-@Input() sucursal: any; // Probablemente también necesites la sucursal
+@Input() productos: any[] = [];
+@Input() sucursal: any; 
 
 }
