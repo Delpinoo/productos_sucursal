@@ -29,12 +29,6 @@ def get_db_connection():
         print(f"Error al conectar a la base de datos: {e}")
     return conn
 
-'''
-@app.route('/')  # Esta es la ruta para la página de inicio
-def index():
-    return "¡Bienvenido a mi aplicación Flask!"
-'''
-
 @app.route('/')
 def get_sucursales():
     conn = get_db_connection()
@@ -113,7 +107,7 @@ def registrar_venta():
                                 productos_vendidos.append({})
                             productos_vendidos[index][field] = request.form[key]
                         except ValueError:
-                            continue  # Ignorar campos de formulario no estructurados como se espera
+                            continue 
 
                 if not id_sucursal or not productos_vendidos:
                     return jsonify({'error': 'Solicitud inválida: id_sucursal y productos son requeridos'}), 400
@@ -131,7 +125,7 @@ def registrar_venta():
                 total_venta = 0.0
                 venta_id = None
 
-                # Insertar la nueva venta
+                
                 cur.execute("INSERT INTO ventas (id_sucursal) VALUES (%s) RETURNING id", (id_sucursal,))
                 venta_id = cur.fetchone()[0]
 
@@ -139,7 +133,7 @@ def registrar_venta():
                     id_producto = item['id_producto']
                     cantidad = item['cantidad']
 
-                    # Verificar stock
+                   
                     cur.execute("SELECT cantidad, precio FROM stock WHERE id_sucursal = %s AND id_producto = %s", (id_sucursal, id_producto))
                     stock_info = cur.fetchone()
 
@@ -148,17 +142,17 @@ def registrar_venta():
 
                     stock_actual, precio_unitario = stock_info
 
-                    # Insertar en detalles_venta
+                    
                     cur.execute("INSERT INTO detalles_venta (id_venta, id_producto, cantidad, precio_unitario) VALUES (%s, %s, %s, %s)",
                                 (venta_id, id_producto, cantidad, precio_unitario))
 
-                    # Actualizar stock
+                    
                     cur.execute("UPDATE stock SET cantidad = cantidad - %s WHERE id_sucursal = %s AND id_producto = %s",
                                 (cantidad, id_sucursal, id_producto))
 
                     total_venta += precio_unitario * cantidad
 
-                # Actualizar el total de la venta
+                
                 cur.execute("UPDATE ventas SET total_venta = %s WHERE id = %s", (total_venta, venta_id))
 
                 conn.commit()

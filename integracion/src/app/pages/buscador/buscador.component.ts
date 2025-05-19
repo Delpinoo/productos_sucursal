@@ -14,8 +14,8 @@ export class BuscadorComponent {
 
   constructor() {
     this.terminoBusquedaControl.pipe(
-      debounceTime(300), // Espera 300ms después de que el usuario deja de escribir
-      distinctUntilChanged() // Emite solo si el valor ha cambiado
+      debounceTime(300),
+      distinctUntilChanged() 
     ).subscribe(termino => {
       this.terminoBusqueda.emit(termino);
     });

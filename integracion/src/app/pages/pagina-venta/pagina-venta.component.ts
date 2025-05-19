@@ -15,7 +15,7 @@ import { ProductoConStock } from '../../interface/producto-con-stock';
 })
 export class PaginaVentaComponent {
 
-  productosFiltrados: ProductoConStock[] = []; // Aquí almacenarás los productos filtrados por la búsqueda
+  productosFiltrados: ProductoConStock[] = []; 
   productoSeleccionado: any;
   sucursalSeleccionada: any;
   
@@ -29,8 +29,8 @@ export class PaginaVentaComponent {
         console.log('Resultados de la búsqueda con stock:', resultados);
       },
       (error) => {
-        console.error('Error al buscar productos con stock:', error); // ¡Asegúrate de esto!
-        console.log('Objeto de error completo:', error); // ¡Agrega esto para ver más detalles!
+        console.error('Error al buscar productos con stock:', error); 
+        console.log('Objeto de error completo:', error);
         this.productosFiltrados = [];
       }
     );
