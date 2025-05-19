@@ -1,0 +1,38 @@
+.pagina-venta-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra el contenedor del móvil horizontalmente */
+  padding: 20px; /* Añade espacio alrededor del contenedor del móvil */
+}
+
+.mobile-container {
+  width: 720px; /* Ancho típico de un móvil */
+  /* height: 568px;  Altura típica de un móvil (puedes ajustarla) */
+  border: 2px solid #333; /* Borde del dispositivo */
+  border-radius: 16px; /* Bordes redondeados */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  margin-top: 20px; /* Espacio desde la parte superior */
+  background-color: #fff; /* Color de fondo del "dispositivo" */
+  overflow: hidden; /* Recorta el contenido que se desborda */
+  /* Estilos adicionales para que se vea más como un móvil */
+  display: flex;
+  flex-direction: column;
+  /* height: 100vh; */ /* Esto puede causar problemas de scroll en pantallas más grandes */
+  max-height: 90vh; /* Altura máxima para el contenedor del móvil */
+}
+
+/* Estilos para el contenido dentro del contenedor del móvil */
+.mobile-container > * {
+  padding: 10px; /* Añade espacio interno al contenido */
+  /* Cualquier estilo adicional que necesites para tus componentes */
+}
+
+/* si necesitas que el contenido se desplace dentro del contenedor móvil */
+.mobile-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Para desplazamiento suave en iOS */
+  padding-bottom: 70px; /* espacio para el formulario fixed */
+  position: relative; /* para posicionar el pseudo elemento */
+}
+
+/* pseudo elemento para la barra inferior */

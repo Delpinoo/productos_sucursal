@@ -1,0 +1,23 @@
+.title{
+    text-align: start;
+}
+
+.select-sucursal{
+    width: 200px;
+}
+
+.input-cantidad{
+    width: 205px;
+}
+
+.precio-transformado{
+    margin-top: 10px;
+    width: 250px;
+    min-height: 50px; 
+    height: 50px; 
+    overflow: hidden; 
+}
+
+.boton-comprar{
+    margin-top: 10px;
+}

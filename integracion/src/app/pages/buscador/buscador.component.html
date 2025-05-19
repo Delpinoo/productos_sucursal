@@ -1,4 +1,7 @@
 <div class="buscador-container">
+  <h4 class="title">Productos por sucursales</h4>
   <label for="buscar">Buscar Producto:</label>
-  <input type="text" id="buscar" (input)="buscar($any($event.target).value)" placeholder="Ingrese nombre o descripción">
+  <div class="input-container">
+    <input class="form-control" type="text" id="buscar" (input)="buscar($any($event.target).value)" placeholder="Nombre del producto">
+  </div>
 </div>

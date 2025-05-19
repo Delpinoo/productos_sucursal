@@ -19,12 +19,24 @@ export class ListaSucursalesComponent implements OnInit {
   cantidadAComprar: { [productoId: number]: number } = {}
   precioEnCLP: { [productoId: number]: number } = {};
   private apiUrlConversion = 'https://v6.exchangerate-api.com/v6/0fb1bdc55aa4225aceae3b5a/latest/USD';
+  private resetearEstadoVenta(productoId: number): void {
+    this.precioEnCLP[productoId] = 0;
+    this.cantidadAComprar[productoId] = 0;
+    this.sucursalSeleccionada[productoId] = 0;
+  }
+
 
   constructor(private http: HttpClient) { }
 
   seleccionarSucursal(productoId: number, event: any): void {
     this.sucursalSeleccionada[productoId] = parseInt(event.target.value, 10);
     console.log(`Sucursal seleccionada para el producto ${productoId}:`, this.sucursalSeleccionada[productoId]);
+  }
+
+  actualizarCantidadAComprar(productoId: number, event: any): void {
+    this.cantidadAComprar[productoId] = parseInt(event.target.value, 10) || 1;
+    this.precioEnCLP[productoId] = 0; // Asigna null // Asigna null
+
   }
 
   calcularPrecioCLP(producto: ProductoConStock): void {
@@ -64,11 +76,40 @@ export class ListaSucursalesComponent implements OnInit {
     }
   }
 
-  // *** NUEVO MÉTODO AQUI ***
-  realizarVenta(producto: ProductoConStock): void {
-    // Este método no hará nada por ahora.
-    console.log(`Botón Venta clickeado para el producto ${producto.nombre}`);
-    // Aquí irá la lógica futura para procesar la venta.
+   realizarVenta(producto: ProductoConStock): void {
+    const sucursalId = this.sucursalSeleccionada[producto.id];
+    const cantidadAComprar = this.cantidadAComprar[producto.id];
+
+    if (sucursalId && cantidadAComprar > 0) {
+      const sucursalIndex = producto.stockPorSucursal.findIndex(
+        (stock) => stock.idSucursal === sucursalId
+      );
+
+      if (sucursalIndex !== -1) {
+        const stockDisponible = producto.stockPorSucursal[sucursalIndex].cantidad;
+
+        if (stockDisponible === 0) {
+          alert(`El stock de ${producto.nombre} en ${producto.stockPorSucursal[sucursalIndex].nombreSucursal} está agotado.`);
+          return; // Detener el proceso de venta
+        }
+
+        if (cantidadAComprar <= stockDisponible) {
+          // Descontar el stock (simulación en el frontend)
+          producto.stockPorSucursal[sucursalIndex].cantidad -= cantidadAComprar;
+          alert(`Venta exitosa de ${cantidadAComprar} unidades de ${producto.nombre} en ${producto.stockPorSucursal[sucursalIndex].nombreSucursal}.`);
+          // Llamada al backend para registrar la venta (tu lógica aquí)
+          this.resetearEstadoVenta(producto.id);
+        } else {
+          alert(
+            `No hay suficiente stock de ${producto.nombre} en ${producto.stockPorSucursal[sucursalIndex].nombreSucursal}. Stock disponible: ${stockDisponible}`
+          );
+        }
+      } else {
+        alert('No se encontró la información de la sucursal seleccionada.');
+      }
+    } else {
+      alert('Por favor, selecciona una sucursal e ingresa una cantidad válida.');
+    }
   }
 
 
