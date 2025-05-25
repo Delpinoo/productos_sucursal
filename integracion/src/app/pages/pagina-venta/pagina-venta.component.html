@@ -13,4 +13,7 @@
       [sucursal]="sucursalSeleccionada"
     ></app-formulario-venta>
   </div>
+  <div *ngIf="notificationMessage" class="alert alert-danger fixed-alert m-3" role="alert">
+    {{ notificationMessage }}
+  </div>
 </div>

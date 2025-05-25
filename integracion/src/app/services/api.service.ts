@@ -24,4 +24,20 @@ export class ApiService {
     return this.http.get<ProductoConStock[]>(`${this.apiUrl}/productos/stock`, { params });
   }
 
+  registrarVenta(idSucursal: number, productos: { id_producto: number; cantidad: number }[]): Observable<any> {
+    const formData = new FormData();
+    formData.append('id_sucursal', idSucursal.toString());
+
+    // Flask espera 'productos[0][id_producto]', 'productos[0][cantidad]', etc.
+    productos.forEach((item, index) => {
+      formData.append(`productos[${index}][id_producto]`, item.id_producto.toString());
+      formData.append(`productos[${index}][cantidad]`, item.cantidad.toString());
+    });
+
+    console.log('API_SERVICE: Enviando FormData:', formData); // Debugging: revisa en la consola del navegador
+
+    // Importante: No establecer el 'Content-Type' a 'application/x-www-form-urlencoded'
+    // cuando se usa FormData. HttpClient lo hace automáticamente con el boundary correcto.
+    return this.http.post<any>(`${this.apiUrl}/venta`, formData);
+  }
 }
