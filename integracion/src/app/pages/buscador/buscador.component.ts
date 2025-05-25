@@ -1,10 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-buscador',
   standalone: true,
+  imports: [CommonModule,],
   templateUrl: './buscador.component.html',
   styleUrls: ['./buscador.component.css']
 })

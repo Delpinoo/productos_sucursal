@@ -4,7 +4,7 @@ import { ProductoConStock } from '../../interface/producto-con-stock';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-lista-sucursales',
@@ -26,7 +26,7 @@ export class ListaSucursalesComponent implements OnInit {
   }
 
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private apiService: ApiService) { }
 
   seleccionarSucursal(productoId: number, event: any): void {
     this.sucursalSeleccionada[productoId] = parseInt(event.target.value, 10);
@@ -76,39 +76,67 @@ export class ListaSucursalesComponent implements OnInit {
     }
   }
 
-   realizarVenta(producto: ProductoConStock): void {
+   // --- FUNCIÓN REALIZAR VENTA MODIFICADA ---
+  realizarVenta(producto: ProductoConStock): void {
     const sucursalId = this.sucursalSeleccionada[producto.id];
     const cantidadAComprar = this.cantidadAComprar[producto.id];
 
-    if (sucursalId && cantidadAComprar > 0) {
-      const sucursalIndex = producto.stockPorSucursal.findIndex(
-        (stock) => stock.idSucursal === sucursalId
-      );
-
-      if (sucursalIndex !== -1) {
-        const stockDisponible = producto.stockPorSucursal[sucursalIndex].cantidad;
-
-        if (stockDisponible === 0) {
-          alert(`El stock de ${producto.nombre} en ${producto.stockPorSucursal[sucursalIndex].nombreSucursal} está agotado.`);
-          return; // Detener el proceso de venta
-        }
-
-        if (cantidadAComprar <= stockDisponible) {
-          producto.stockPorSucursal[sucursalIndex].cantidad -= cantidadAComprar;
-          alert(`Venta exitosa de ${cantidadAComprar} unidades de ${producto.nombre} en ${producto.stockPorSucursal[sucursalIndex].nombreSucursal}.`);
-          this.resetearEstadoVenta(producto.id);
-        } else {
-          alert(
-            `No hay suficiente stock de ${producto.nombre} en ${producto.stockPorSucursal[sucursalIndex].nombreSucursal}. Stock disponible: ${stockDisponible}`
-          );
-        }
-      } else {
-        alert('No se encontró la información de la sucursal seleccionada.');
-      }
-    } else {
+    if (!sucursalId || cantidadAComprar <= 0) {
       alert('Por favor, selecciona una sucursal e ingresa una cantidad válida.');
+      return;
     }
+
+    const productoEnSucursal = producto.stockPorSucursal.find(
+      (stock) => stock.idSucursal === sucursalId
+    );
+
+    if (!productoEnSucursal) {
+      alert('Información de stock para la sucursal seleccionada no encontrada.');
+      return;
+    }
+
+    const stockDisponible = productoEnSucursal.cantidad;
+
+    if (stockDisponible === 0) {
+      alert(`El stock de ${producto.nombre} en ${productoEnSucursal.nombreSucursal} está agotado.`);
+      return;
+    }
+
+    if (cantidadAComprar > stockDisponible) {
+      alert(`No hay suficiente stock de ${producto.nombre} en ${productoEnSucursal.nombreSucursal}. Stock disponible: ${stockDisponible}`);
+      return;
+    }
+
+    // Preparar los datos para enviar a Flask
+    const datosVenta = {
+      id_producto: producto.id,
+      cantidad: cantidadAComprar
+    };
+
+    // Llamar al ApiService para registrar la venta en el backend
+    this.apiService.registrarVenta(sucursalId, [datosVenta]).subscribe(
+      (response) => {
+        console.log('Venta registrada exitosamente en el backend:', response);
+        alert(`Venta exitosa de ${cantidadAComprar} unidades de ${producto.nombre} en ${productoEnSucursal.nombreSucursal}.`);
+        
+        // Opcional: Actualizar el stock en el frontend después de una respuesta exitosa del backend
+        // para mantener la UI sincronizada, aunque Flask ya actualizó la DB.
+        productoEnSucursal.cantidad -= cantidadAComprar; 
+
+        this.resetearEstadoVenta(producto.id);
+      },
+      (error) => {
+        console.error('Error al registrar la venta en el backend:', error);
+        if (error.error && error.error.error) {
+            alert(`Error al registrar la venta: ${error.error.error}`);
+        } else {
+            alert('Hubo un error al registrar la venta. Por favor, inténtalo de nuevo.');
+        }
+      }
+    );
   }
+  // --- FIN FUNCIÓN REALIZAR VENTA MODIFICADA ---
+
 
 
   ngOnInit(): void {
