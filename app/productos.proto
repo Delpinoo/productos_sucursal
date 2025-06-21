@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+// ¡IMPORTANTE! Importa el tipo Empty de Google Protobuf
+import "google/protobuf/empty.proto";
+
+// Define el paquete para los servicios y mensajes
+package productos_service;
+
+// Mensaje para un Producto
+message Producto {
+  int32 id = 1;
+  string nombre = 2;
+  double precio = 3;
+  bytes imagen = 4;
+}
+
+// Mensaje para la solicitud de creación de un producto
+message CreateProductoRequest {
+  Producto producto = 1;
+}
+
+// Mensaje para la respuesta de creación o obtención de un producto
+message ProductoResponse {
+  Producto producto = 1;
+  string message = 2;
+  bool success = 3;
+}
+
+// Mensaje para la solicitud de obtener un producto por ID
+message GetProductoRequest {
+  int32 id = 1;
+}
+
+// Mensaje para la respuesta de listar productos
+message ListProductosResponse {
+  repeated Producto productos = 1;
+}
+
+// Definición del servicio gRPC
+service ProductosService {
+  // RPC para crear un nuevo producto
+  rpc CreateProducto (CreateProductoRequest) returns (ProductoResponse);
+
+  // RPC para obtener un producto por su ID
+  rpc GetProducto (GetProductoRequest) returns (ProductoResponse);
+
+  // RPC para listar todos los productos
+  rpc ListProductos (google.protobuf.Empty) returns (ListProductosResponse);
+}

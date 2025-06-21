@@ -1,0 +1,50 @@
+# Dockerfile.grpc
+
+# Utiliza la imagen base de Python 3.10 slim (más pequeña y compatible)
+FROM python:3.10-slim-buster
+
+# Establece el directorio de trabajo base dentro del contenedor a /app.
+WORKDIR /app
+
+# Copia solo el archivo requirements.txt primero para aprovechar la caché de Docker
+COPY app/requirements.txt .
+
+# Instala las dependencias listadas en requirements.txt.
+# --no-cache-dir asegura que pip no almacene paquetes en caché localmente.
+RUN pip install --no-cache-dir -r requirements.txt
+
+# --- NUEVOS PASOS PARA DESCARGAR Y COLOCAR google/protobuf/empty.proto ---
+# Instala curl para poder descargar archivos dentro del contenedor
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Crea los directorios necesarios para la importación de protobuf estándar
+RUN mkdir -p google/protobuf/
+
+# Descarga empty.proto de la fuente oficial de Protobuf y colócalo en la ubicación correcta
+# Esto asegura que 'protoc' pueda encontrarlo al usar '-I.' (el directorio actual)
+RUN curl -o google/protobuf/empty.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/empty.proto
+# --- FIN DE NUEVOS PASOS ---
+
+# Copia TODO el contenido de la carpeta 'app' desde tu contexto de Docker local
+# (que ahora incluye productos.proto) directamente al WORKDIR '/app' dentro del contenedor.
+COPY app/ .
+
+# Copia el archivo .env desde la raíz de tu proyecto local a la raíz del WORKDIR del contenedor (/app/.env).
+COPY .env .
+
+# Añade el WORKDIR (/app) al PYTHONPATH del contenedor.
+# Esto es crucial para que Python pueda encontrar los módulos importados
+# directamente desde el directorio raíz de la aplicación (/app), como productos_pb2.
+ENV PYTHONPATH=/app
+
+# Generar los archivos _pb2.py y _pb2_grpc.py dentro del contenedor.
+# -I. indica que el compilador debe buscar archivos .proto en el directorio actual (/app).
+# Esto encontrará 'productos.proto' y, gracias a los pasos anteriores, 'google/protobuf/empty.proto'.
+RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. productos.proto
+
+# Expone el puerto donde el servidor gRPC escuchará las conexiones.
+EXPOSE 50051
+
+# Define el comando para ejecutar el servidor gRPC cuando el contenedor se inicia.
+# El flag -u asegura que la salida de Python no esté en búfer, lo que nos permite ver los "prints" inmediatamente.
+CMD python -u app_grpc_server.py
