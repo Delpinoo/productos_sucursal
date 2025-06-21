@@ -1,14 +1,11 @@
-# envoy.yaml - CONFIGURACIÓN FINAL CORREGIDA
-# La sección admin para la interfaz de administración de Envoy
 admin:
   access_log_path: "/dev/stdout"
   address:
     socket_address:
       protocol: TCP
       address: 0.0.0.0
-      port_value: 9901 # Puerto para la interfaz de administración de Envoy
+      port_value: 9901
 
-# Recursos estáticos: listeners y clusters
 static_resources:
   listeners:
   - name: listener_0
@@ -16,15 +13,14 @@ static_resources:
       socket_address:
         protocol: TCP
         address: 0.0.0.0
-        port_value: 8080 # Este es el puerto principal para tu servicio gRPC
+        port_value: 8080
     filter_chains:
     - filters:
       - name: envoy.filters.network.http_connection_manager
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
           stat_prefix: ingress_http
-          codec_type: AUTO # Envoy detectará automáticamente HTTP/1.1 o HTTP/2
-          # Habilitar explícitamente HTTP/2 para la conexión de entrada, crucial para gRPC
+          codec_type: AUTO
           http2_protocol_options: {}
           route_config:
             name: local_route
@@ -36,24 +32,22 @@ static_resources:
                   prefix: "/"
                 route:
                   cluster: grpc_server_cluster
-                # Añadimos este encabezado explícitamente para asegurar que el servidor gRPC
-                # lo reciba, ya que a veces proxies pueden interferir.
                 request_headers_to_add:
                   - header:
                       key: "te"
                       value: "trailers"
-                    append: false # No queremos añadirlo si ya existe, queremos que tenga este valor explícitamente.
+                    append: false
           http_filters:
-          - name: envoy.filters.http.router # Filtro de enrutamiento HTTP
+          - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
   clusters:
   - name: grpc_server_cluster
-    connect_timeout: 5s # Aumentado el tiempo de espera de conexión a 5 segundos
-    type: LOGICAL_DNS # Resuelve el nombre del host (grpc_server) a IPs via DNS
-    dns_lookup_family: V4_ONLY # Solo usa IPv4
-    lb_policy: ROUND_ROBIN # Política de balanceo de carga
+    connect_timeout: 5s
+    type: LOGICAL_DNS
+    dns_lookup_family: V4_ONLY
+    lb_policy: ROUND_ROBIN
     load_assignment:
       cluster_name: grpc_server_cluster
       endpoints:
@@ -62,9 +56,8 @@ static_resources:
             address:
               socket_address:
                 protocol: TCP
-                address: grpc_server # Nombre del servicio del contenedor gRPC en Docker Compose
-                port_value: 50051 # Puerto interno del servidor gRPC
-    # Habilitar explícitamente HTTP/2 para las conexiones upstream al grpc_server
+                address: grpc_server
+                port_value: 50051
     typed_extension_protocol_options:
       envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
         "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions

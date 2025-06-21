@@ -51,6 +51,51 @@ class ProductosServiceStub(object):
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=productos__pb2.ListProductosResponse.FromString,
                 _registered_method=True)
+        self.CreateSucursal = channel.unary_unary(
+                '/productos_service.ProductosService/CreateSucursal',
+                request_serializer=productos__pb2.CreateSucursalRequest.SerializeToString,
+                response_deserializer=productos__pb2.SucursalResponse.FromString,
+                _registered_method=True)
+        self.GetSucursal = channel.unary_unary(
+                '/productos_service.ProductosService/GetSucursal',
+                request_serializer=productos__pb2.GetSucursalRequest.SerializeToString,
+                response_deserializer=productos__pb2.SucursalResponse.FromString,
+                _registered_method=True)
+        self.ListSucursales = channel.unary_unary(
+                '/productos_service.ProductosService/ListSucursales',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=productos__pb2.ListSucursalesResponse.FromString,
+                _registered_method=True)
+        self.AddStock = channel.unary_unary(
+                '/productos_service.ProductosService/AddStock',
+                request_serializer=productos__pb2.AddStockRequest.SerializeToString,
+                response_deserializer=productos__pb2.StockResponse.FromString,
+                _registered_method=True)
+        self.RemoveStock = channel.unary_unary(
+                '/productos_service.ProductosService/RemoveStock',
+                request_serializer=productos__pb2.RemoveStockRequest.SerializeToString,
+                response_deserializer=productos__pb2.StockResponse.FromString,
+                _registered_method=True)
+        self.UpdateStock = channel.unary_unary(
+                '/productos_service.ProductosService/UpdateStock',
+                request_serializer=productos__pb2.UpdateStockRequest.SerializeToString,
+                response_deserializer=productos__pb2.StockResponse.FromString,
+                _registered_method=True)
+        self.GetStock = channel.unary_unary(
+                '/productos_service.ProductosService/GetStock',
+                request_serializer=productos__pb2.GetStockRequest.SerializeToString,
+                response_deserializer=productos__pb2.StockResponse.FromString,
+                _registered_method=True)
+        self.ListStockByProduct = channel.unary_unary(
+                '/productos_service.ProductosService/ListStockByProduct',
+                request_serializer=productos__pb2.ListStockByProductRequest.SerializeToString,
+                response_deserializer=productos__pb2.ListStockByProductResponse.FromString,
+                _registered_method=True)
+        self.ListStockByBranch = channel.unary_unary(
+                '/productos_service.ProductosService/ListStockByBranch',
+                request_serializer=productos__pb2.ListStockByBranchRequest.SerializeToString,
+                response_deserializer=productos__pb2.ListStockByBranchResponse.FromString,
+                _registered_method=True)
 
 
 class ProductosServiceServicer(object):
@@ -58,22 +103,76 @@ class ProductosServiceServicer(object):
     """
 
     def CreateProducto(self, request, context):
-        """RPC para crear un nuevo producto
+        """RPCs para Productos
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetProducto(self, request, context):
-        """RPC para obtener un producto por su ID
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ListProductos(self, request, context):
-        """RPC para listar todos los productos
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateSucursal(self, request, context):
+        """RPCs para Sucursales
         """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetSucursal(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListSucursales(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AddStock(self, request, context):
+        """RPCs para Stock de Productos
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RemoveStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListStockByProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListStockByBranch(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -95,6 +194,51 @@ def add_ProductosServiceServicer_to_server(servicer, server):
                     servicer.ListProductos,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=productos__pb2.ListProductosResponse.SerializeToString,
+            ),
+            'CreateSucursal': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateSucursal,
+                    request_deserializer=productos__pb2.CreateSucursalRequest.FromString,
+                    response_serializer=productos__pb2.SucursalResponse.SerializeToString,
+            ),
+            'GetSucursal': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetSucursal,
+                    request_deserializer=productos__pb2.GetSucursalRequest.FromString,
+                    response_serializer=productos__pb2.SucursalResponse.SerializeToString,
+            ),
+            'ListSucursales': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListSucursales,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=productos__pb2.ListSucursalesResponse.SerializeToString,
+            ),
+            'AddStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddStock,
+                    request_deserializer=productos__pb2.AddStockRequest.FromString,
+                    response_serializer=productos__pb2.StockResponse.SerializeToString,
+            ),
+            'RemoveStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.RemoveStock,
+                    request_deserializer=productos__pb2.RemoveStockRequest.FromString,
+                    response_serializer=productos__pb2.StockResponse.SerializeToString,
+            ),
+            'UpdateStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateStock,
+                    request_deserializer=productos__pb2.UpdateStockRequest.FromString,
+                    response_serializer=productos__pb2.StockResponse.SerializeToString,
+            ),
+            'GetStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetStock,
+                    request_deserializer=productos__pb2.GetStockRequest.FromString,
+                    response_serializer=productos__pb2.StockResponse.SerializeToString,
+            ),
+            'ListStockByProduct': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListStockByProduct,
+                    request_deserializer=productos__pb2.ListStockByProductRequest.FromString,
+                    response_serializer=productos__pb2.ListStockByProductResponse.SerializeToString,
+            ),
+            'ListStockByBranch': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListStockByBranch,
+                    request_deserializer=productos__pb2.ListStockByBranchRequest.FromString,
+                    response_serializer=productos__pb2.ListStockByBranchResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -179,6 +323,249 @@ class ProductosService(object):
             '/productos_service.ProductosService/ListProductos',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             productos__pb2.ListProductosResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateSucursal(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/CreateSucursal',
+            productos__pb2.CreateSucursalRequest.SerializeToString,
+            productos__pb2.SucursalResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetSucursal(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/GetSucursal',
+            productos__pb2.GetSucursalRequest.SerializeToString,
+            productos__pb2.SucursalResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListSucursales(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/ListSucursales',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            productos__pb2.ListSucursalesResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AddStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/AddStock',
+            productos__pb2.AddStockRequest.SerializeToString,
+            productos__pb2.StockResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RemoveStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/RemoveStock',
+            productos__pb2.RemoveStockRequest.SerializeToString,
+            productos__pb2.StockResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/UpdateStock',
+            productos__pb2.UpdateStockRequest.SerializeToString,
+            productos__pb2.StockResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/GetStock',
+            productos__pb2.GetStockRequest.SerializeToString,
+            productos__pb2.StockResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListStockByProduct(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/ListStockByProduct',
+            productos__pb2.ListStockByProductRequest.SerializeToString,
+            productos__pb2.ListStockByProductResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListStockByBranch(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/ListStockByBranch',
+            productos__pb2.ListStockByBranchRequest.SerializeToString,
+            productos__pb2.ListStockByBranchResponse.FromString,
             options,
             channel_credentials,
             insecure,

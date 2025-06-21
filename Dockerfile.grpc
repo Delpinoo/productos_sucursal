@@ -4,47 +4,48 @@
 FROM python:3.10-slim-buster
 
 # Establece el directorio de trabajo base dentro del contenedor a /app.
+# Todos los COPY y RUN subsiguientes serán relativos a este directorio.
 WORKDIR /app
 
-# Copia solo el archivo requirements.txt primero para aprovechar la caché de Docker
+# Copia solo el archivo requirements.txt desde tu carpeta 'app/' local
+# a la raíz del WORKDIR del contenedor (es decir, a /app/requirements.txt).
 COPY app/requirements.txt .
 
 # Instala las dependencias listadas en requirements.txt.
-# --no-cache-dir asegura que pip no almacene paquetes en caché localmente.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- NUEVOS PASOS PARA DESCARGAR Y COLOCAR google/protobuf/empty.proto ---
-# Instala curl para poder descargar archivos dentro del contenedor
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-# Crea los directorios necesarios para la importación de protobuf estándar
-RUN mkdir -p google/protobuf/
-
-# Descarga empty.proto de la fuente oficial de Protobuf y colócalo en la ubicación correcta
-# Esto asegura que 'protoc' pueda encontrarlo al usar '-I.' (el directorio actual)
-RUN curl -o google/protobuf/empty.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/empty.proto
-# --- FIN DE NUEVOS PASOS ---
-
-# Copia TODO el contenido de la carpeta 'app' desde tu contexto de Docker local
-# (que ahora incluye productos.proto) directamente al WORKDIR '/app' dentro del contenedor.
+# Copia TODO el contenido de la carpeta 'app/' local
+# (que ahora DEBE CONTENER productos.proto, app_grpc_server.py, __init__.py)
+# directamente a la raíz del WORKDIR del contenedor (/app/).
 COPY app/ .
 
 # Copia el archivo .env desde la raíz de tu proyecto local a la raíz del WORKDIR del contenedor (/app/.env).
 COPY .env .
 
-# Añade el WORKDIR (/app) al PYTHONPATH del contenedor.
-# Esto es crucial para que Python pueda encontrar los módulos importados
-# directamente desde el directorio raíz de la aplicación (/app), como productos_pb2.
-ENV PYTHONPATH=/app
+# --- PASO DE DEPURACIÓN EN CONSTRUCCIÓN (se mantienen para verificación) ---
+# Listar el contenido del directorio /app ANTES de la generación de protobuf.
+# Estos comandos se ejecutarán durante la fase de 'Building' del docker compose.
+RUN echo "--- Contenido de /app antes de protoc (tras COPY) ---" && ls -l /app
 
 # Generar los archivos _pb2.py y _pb2_grpc.py dentro del contenedor.
-# -I. indica que el compilador debe buscar archivos .proto en el directorio actual (/app).
-# Esto encontrará 'productos.proto' y, gracias a los pasos anteriores, 'google/protobuf/empty.proto'.
+# Como productos.proto ahora está directamente en /app, el comando es directo.
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. productos.proto
 
-# Expone el puerto donde el servidor gRPC escuchará las conexiones.
-EXPOSE 50051
+# Listar el contenido del directorio /app DESPUÉS de la generación de protobuf.
+RUN echo "--- Contenido de /app después de protoc (tras generación) ---" && ls -l /app
 
-# Define el comando para ejecutar el servidor gRPC cuando el contenedor se inicia.
-# El flag -u asegura que la salida de Python no esté en búfer, lo que nos permite ver los "prints" inmediatamente.
-CMD python -u app_grpc_server.py
+# Prueba de importación durante la construcción para confirmar la generación.
+# Si esto falla, el problema es durante la construcción de la imagen.
+RUN python -c "import productos_pb2; import productos_pb2_grpc; print('Protobuf files imported successfully during build time.')"
+# --- FIN PASOS DE DEPURACIÓN EN CONSTRUCCIÓN ---
+
+# Añade el WORKDIR (/app) al PYTHONPATH del contenedor. Esto es crucial.
+ENV PYTHONPATH=/app
+
+# --- LÓGICA DE EJECUCIÓN DEL SERVIDOR (simplificada y directa) ---
+# Define el comando para ejecutar el servidor gRPC.
+# Ejecutamos el archivo directamente con 'python' ya que /app está en PYTHONPATH.
+CMD ["python", "app_grpc_server.py"]
+
+# Expon el puerto donde el servidor gRPC escuchará las conexiones.
+EXPOSE 50051

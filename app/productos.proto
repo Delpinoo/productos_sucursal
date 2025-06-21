@@ -1,49 +1,164 @@
 syntax = "proto3";
 
-// ¡IMPORTANTE! Importa el tipo Empty de Google Protobuf
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto"; // Para la fecha de venta
 
-// Define el paquete para los servicios y mensajes
 package productos_service;
 
-// Mensaje para un Producto
+// Mensaje para un Producto (Alineado con tu tabla 'productos' original)
 message Producto {
   int32 id = 1;
   string nombre = 2;
-  double precio = 3;
-  bytes imagen = 4;
+  string descripcion = 3; // Añadido 'descripcion'
+  bytes imagen = 4;       // Mantenido 'imagen'
 }
 
-// Mensaje para la solicitud de creación de un producto
+// Mensaje para una Sucursal (Alineado con tu tabla 'sucursales' original)
+message Sucursal {
+  int32 id = 1;
+  string nombre = 2;
+  // string direccion = 3; // Eliminado 'direccion' para coincidir con tu esquema
+}
+
+// Mensaje para el Stock de un Producto en una Sucursal específica (Alineado con tu tabla 'stock')
+message StockProducto {
+  int32 id = 1;
+  int32 id_sucursal = 2;
+  int32 id_producto = 3;
+  int32 cantidad = 4;
+  double precio = 5; // Precio por producto en esta sucursal (DECIMAL en DB -> double en Protobuf)
+}
+
+// Mensaje para una Venta (Alineado con tu tabla 'ventas')
+message Venta {
+  int32 id = 1;
+  google.protobuf.Timestamp fecha = 2; // Usamos Timestamp para la fecha
+  double total_venta = 3;               // DECIMAL en DB -> double en Protobuf
+  int32 id_sucursal = 4;
+}
+
+// Mensaje para los Detalles de Venta (Alineado con tu tabla 'detalles_venta')
+message DetalleVenta {
+  int32 id = 1;
+  int32 id_venta = 2;
+  int32 id_producto = 3;
+  int32 cantidad = 4;
+  double precio_unitario = 5; // DECIMAL en DB -> double en Protobuf
+}
+
+
+// Solicitudes y Respuestas para Productos (Ajustadas)
 message CreateProductoRequest {
-  Producto producto = 1;
+  string nombre = 1;
+  string descripcion = 2;
+  bytes imagen = 3;
 }
 
-// Mensaje para la respuesta de creación o obtención de un producto
 message ProductoResponse {
   Producto producto = 1;
   string message = 2;
   bool success = 3;
 }
 
-// Mensaje para la solicitud de obtener un producto por ID
 message GetProductoRequest {
   int32 id = 1;
 }
 
-// Mensaje para la respuesta de listar productos
 message ListProductosResponse {
   repeated Producto productos = 1;
 }
 
+
+// Solicitudes y Respuestas para Sucursales (Ajustadas)
+message CreateSucursalRequest {
+  string nombre = 1;
+  // string direccion = 2; // Eliminado 'direccion' de la solicitud
+}
+
+message SucursalResponse {
+  Sucursal sucursal = 1;
+  string message = 2;
+  bool success = 3;
+}
+
+message GetSucursalRequest {
+  int32 id = 1;
+}
+
+message ListSucursalesResponse {
+  repeated Sucursal sucursales = 1;
+}
+
+
+// Solicitudes y Respuestas para Stock de Productos (Ajustadas para la nueva estructura 'StockProducto')
+message AddStockRequest {
+  int32 id_producto = 1;
+  int32 id_sucursal = 2;
+  int32 cantidad_a_sumar = 3;
+}
+
+message RemoveStockRequest {
+  int32 id_producto = 1;
+  int32 id_sucursal = 2;
+  int32 cantidad_a_restar = 3;
+}
+
+message UpdateStockRequest {
+  int32 id_producto = 1;
+  int32 id_sucursal = 2;
+  int32 nueva_cantidad = 3;
+  double nuevo_precio = 4; // También se puede actualizar el precio del stock
+}
+
+message GetStockRequest {
+  int32 id_producto = 1;
+  int32 id_sucursal = 2;
+}
+
+message StockResponse {
+  StockProducto stock_producto = 1;
+  string message = 2;
+  bool success = 3;
+}
+
+message ListStockByProductRequest {
+  int32 id_producto = 1;
+}
+
+message ListStockByProductResponse {
+  repeated StockProducto stock_productos = 1;
+}
+
+message ListStockByBranchRequest {
+  int32 id_sucursal = 1;
+}
+
+message ListStockByBranchResponse {
+  repeated StockProducto stock_productos = 1;
+}
+
+
 // Definición del servicio gRPC
 service ProductosService {
-  // RPC para crear un nuevo producto
+  // RPCs para Productos
   rpc CreateProducto (CreateProductoRequest) returns (ProductoResponse);
-
-  // RPC para obtener un producto por su ID
   rpc GetProducto (GetProductoRequest) returns (ProductoResponse);
-
-  // RPC para listar todos los productos
   rpc ListProductos (google.protobuf.Empty) returns (ListProductosResponse);
+
+  // RPCs para Sucursales
+  rpc CreateSucursal (CreateSucursalRequest) returns (SucursalResponse);
+  rpc GetSucursal (GetSucursalRequest) returns (SucursalResponse);
+  rpc ListSucursales (google.protobuf.Empty) returns (ListSucursalesResponse);
+
+  // RPCs para Stock de Productos
+  rpc AddStock (AddStockRequest) returns (StockResponse);
+  rpc RemoveStock (RemoveStockRequest) returns (StockResponse);
+  rpc UpdateStock (UpdateStockRequest) returns (StockResponse);
+  rpc GetStock (GetStockRequest) returns (StockResponse);
+  rpc ListStockByProduct (ListStockByProductRequest) returns (ListStockByProductResponse);
+  rpc ListStockByBranch (ListStockByBranchRequest) returns (ListStockByBranchResponse);
+
+  // NOTA: RPCs para Ventas y Detalles de Venta se añadirán en futuras iteraciones.
+  // rpc CreateVenta (...) returns (...);
+  // rpc AddDetalleVenta (...) returns (...);
 }

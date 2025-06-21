@@ -23,25 +23,60 @@ _sym_db = _symbol_database.Default()
 
 
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fproductos.proto\x12\x11productos_service\x1a\x1bgoogle/protobuf/empty.proto\"F\n\x08Producto\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0e\n\x06nombre\x18\x02 \x01(\t\x12\x0e\n\x06precio\x18\x03 \x01(\x01\x12\x0e\n\x06imagen\x18\x04 \x01(\x0c\"F\n\x15\x43reateProductoRequest\x12-\n\x08producto\x18\x01 \x01(\x0b\x32\x1b.productos_service.Producto\"c\n\x10ProductoResponse\x12-\n\x08producto\x18\x01 \x01(\x0b\x32\x1b.productos_service.Producto\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08\" \n\x12GetProductoRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"G\n\x15ListProductosResponse\x12.\n\tproductos\x18\x01 \x03(\x0b\x32\x1b.productos_service.Producto2\xa1\x02\n\x10ProductosService\x12_\n\x0e\x43reateProducto\x12(.productos_service.CreateProductoRequest\x1a#.productos_service.ProductoResponse\x12Y\n\x0bGetProducto\x12%.productos_service.GetProductoRequest\x1a#.productos_service.ProductoResponse\x12Q\n\rListProductos\x12\x16.google.protobuf.Empty\x1a(.productos_service.ListProductosResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fproductos.proto\x12\x11productos_service\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"K\n\x08Producto\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0e\n\x06nombre\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x0e\n\x06imagen\x18\x04 \x01(\x0c\"&\n\x08Sucursal\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0e\n\x06nombre\x18\x02 \x01(\t\"g\n\rStockProducto\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x13\n\x0bid_sucursal\x18\x02 \x01(\x05\x12\x13\n\x0bid_producto\x18\x03 \x01(\x05\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\x12\x0e\n\x06precio\x18\x05 \x01(\x01\"h\n\x05Venta\x12\n\n\x02id\x18\x01 \x01(\x05\x12)\n\x05\x66\x65\x63ha\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x13\n\x0btotal_venta\x18\x03 \x01(\x01\x12\x13\n\x0bid_sucursal\x18\x04 \x01(\x05\"l\n\x0c\x44\x65talleVenta\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08id_venta\x18\x02 \x01(\x05\x12\x13\n\x0bid_producto\x18\x03 \x01(\x05\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\x12\x17\n\x0fprecio_unitario\x18\x05 \x01(\x01\"L\n\x15\x43reateProductoRequest\x12\x0e\n\x06nombre\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x02 \x01(\t\x12\x0e\n\x06imagen\x18\x03 \x01(\x0c\"c\n\x10ProductoResponse\x12-\n\x08producto\x18\x01 \x01(\x0b\x32\x1b.productos_service.Producto\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08\" \n\x12GetProductoRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"G\n\x15ListProductosResponse\x12.\n\tproductos\x18\x01 \x03(\x0b\x32\x1b.productos_service.Producto\"\'\n\x15\x43reateSucursalRequest\x12\x0e\n\x06nombre\x18\x01 \x01(\t\"c\n\x10SucursalResponse\x12-\n\x08sucursal\x18\x01 \x01(\x0b\x32\x1b.productos_service.Sucursal\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08\" \n\x12GetSucursalRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"I\n\x16ListSucursalesResponse\x12/\n\nsucursales\x18\x01 \x03(\x0b\x32\x1b.productos_service.Sucursal\"U\n\x0f\x41\x64\x64StockRequest\x12\x13\n\x0bid_producto\x18\x01 \x01(\x05\x12\x13\n\x0bid_sucursal\x18\x02 \x01(\x05\x12\x18\n\x10\x63\x61ntidad_a_sumar\x18\x03 \x01(\x05\"Y\n\x12RemoveStockRequest\x12\x13\n\x0bid_producto\x18\x01 \x01(\x05\x12\x13\n\x0bid_sucursal\x18\x02 \x01(\x05\x12\x19\n\x11\x63\x61ntidad_a_restar\x18\x03 \x01(\x05\"l\n\x12UpdateStockRequest\x12\x13\n\x0bid_producto\x18\x01 \x01(\x05\x12\x13\n\x0bid_sucursal\x18\x02 \x01(\x05\x12\x16\n\x0enueva_cantidad\x18\x03 \x01(\x05\x12\x14\n\x0cnuevo_precio\x18\x04 \x01(\x01\";\n\x0fGetStockRequest\x12\x13\n\x0bid_producto\x18\x01 \x01(\x05\x12\x13\n\x0bid_sucursal\x18\x02 \x01(\x05\"k\n\rStockResponse\x12\x38\n\x0estock_producto\x18\x01 \x01(\x0b\x32 .productos_service.StockProducto\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08\"0\n\x19ListStockByProductRequest\x12\x13\n\x0bid_producto\x18\x01 \x01(\x05\"W\n\x1aListStockByProductResponse\x12\x39\n\x0fstock_productos\x18\x01 \x03(\x0b\x32 .productos_service.StockProducto\"/\n\x18ListStockByBranchRequest\x12\x13\n\x0bid_sucursal\x18\x01 \x01(\x05\"V\n\x19ListStockByBranchResponse\x12\x39\n\x0fstock_productos\x18\x01 \x03(\x0b\x32 .productos_service.StockProducto2\xe9\x08\n\x10ProductosService\x12_\n\x0e\x43reateProducto\x12(.productos_service.CreateProductoRequest\x1a#.productos_service.ProductoResponse\x12Y\n\x0bGetProducto\x12%.productos_service.GetProductoRequest\x1a#.productos_service.ProductoResponse\x12Q\n\rListProductos\x12\x16.google.protobuf.Empty\x1a(.productos_service.ListProductosResponse\x12_\n\x0e\x43reateSucursal\x12(.productos_service.CreateSucursalRequest\x1a#.productos_service.SucursalResponse\x12Y\n\x0bGetSucursal\x12%.productos_service.GetSucursalRequest\x1a#.productos_service.SucursalResponse\x12S\n\x0eListSucursales\x12\x16.google.protobuf.Empty\x1a).productos_service.ListSucursalesResponse\x12P\n\x08\x41\x64\x64Stock\x12\".productos_service.AddStockRequest\x1a .productos_service.StockResponse\x12V\n\x0bRemoveStock\x12%.productos_service.RemoveStockRequest\x1a .productos_service.StockResponse\x12V\n\x0bUpdateStock\x12%.productos_service.UpdateStockRequest\x1a .productos_service.StockResponse\x12P\n\x08GetStock\x12\".productos_service.GetStockRequest\x1a .productos_service.StockResponse\x12q\n\x12ListStockByProduct\x12,.productos_service.ListStockByProductRequest\x1a-.productos_service.ListStockByProductResponse\x12n\n\x11ListStockByBranch\x12+.productos_service.ListStockByBranchRequest\x1a,.productos_service.ListStockByBranchResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'productos_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_PRODUCTO']._serialized_start=67
-  _globals['_PRODUCTO']._serialized_end=137
-  _globals['_CREATEPRODUCTOREQUEST']._serialized_start=139
-  _globals['_CREATEPRODUCTOREQUEST']._serialized_end=209
-  _globals['_PRODUCTORESPONSE']._serialized_start=211
-  _globals['_PRODUCTORESPONSE']._serialized_end=310
-  _globals['_GETPRODUCTOREQUEST']._serialized_start=312
-  _globals['_GETPRODUCTOREQUEST']._serialized_end=344
-  _globals['_LISTPRODUCTOSRESPONSE']._serialized_start=346
-  _globals['_LISTPRODUCTOSRESPONSE']._serialized_end=417
-  _globals['_PRODUCTOSSERVICE']._serialized_start=420
-  _globals['_PRODUCTOSSERVICE']._serialized_end=709
+  _globals['_PRODUCTO']._serialized_start=100
+  _globals['_PRODUCTO']._serialized_end=175
+  _globals['_SUCURSAL']._serialized_start=177
+  _globals['_SUCURSAL']._serialized_end=215
+  _globals['_STOCKPRODUCTO']._serialized_start=217
+  _globals['_STOCKPRODUCTO']._serialized_end=320
+  _globals['_VENTA']._serialized_start=322
+  _globals['_VENTA']._serialized_end=426
+  _globals['_DETALLEVENTA']._serialized_start=428
+  _globals['_DETALLEVENTA']._serialized_end=536
+  _globals['_CREATEPRODUCTOREQUEST']._serialized_start=538
+  _globals['_CREATEPRODUCTOREQUEST']._serialized_end=614
+  _globals['_PRODUCTORESPONSE']._serialized_start=616
+  _globals['_PRODUCTORESPONSE']._serialized_end=715
+  _globals['_GETPRODUCTOREQUEST']._serialized_start=717
+  _globals['_GETPRODUCTOREQUEST']._serialized_end=749
+  _globals['_LISTPRODUCTOSRESPONSE']._serialized_start=751
+  _globals['_LISTPRODUCTOSRESPONSE']._serialized_end=822
+  _globals['_CREATESUCURSALREQUEST']._serialized_start=824
+  _globals['_CREATESUCURSALREQUEST']._serialized_end=863
+  _globals['_SUCURSALRESPONSE']._serialized_start=865
+  _globals['_SUCURSALRESPONSE']._serialized_end=964
+  _globals['_GETSUCURSALREQUEST']._serialized_start=966
+  _globals['_GETSUCURSALREQUEST']._serialized_end=998
+  _globals['_LISTSUCURSALESRESPONSE']._serialized_start=1000
+  _globals['_LISTSUCURSALESRESPONSE']._serialized_end=1073
+  _globals['_ADDSTOCKREQUEST']._serialized_start=1075
+  _globals['_ADDSTOCKREQUEST']._serialized_end=1160
+  _globals['_REMOVESTOCKREQUEST']._serialized_start=1162
+  _globals['_REMOVESTOCKREQUEST']._serialized_end=1251
+  _globals['_UPDATESTOCKREQUEST']._serialized_start=1253
+  _globals['_UPDATESTOCKREQUEST']._serialized_end=1361
+  _globals['_GETSTOCKREQUEST']._serialized_start=1363
+  _globals['_GETSTOCKREQUEST']._serialized_end=1422
+  _globals['_STOCKRESPONSE']._serialized_start=1424
+  _globals['_STOCKRESPONSE']._serialized_end=1531
+  _globals['_LISTSTOCKBYPRODUCTREQUEST']._serialized_start=1533
+  _globals['_LISTSTOCKBYPRODUCTREQUEST']._serialized_end=1581
+  _globals['_LISTSTOCKBYPRODUCTRESPONSE']._serialized_start=1583
+  _globals['_LISTSTOCKBYPRODUCTRESPONSE']._serialized_end=1670
+  _globals['_LISTSTOCKBYBRANCHREQUEST']._serialized_start=1672
+  _globals['_LISTSTOCKBYBRANCHREQUEST']._serialized_end=1719
+  _globals['_LISTSTOCKBYBRANCHRESPONSE']._serialized_start=1721
+  _globals['_LISTSTOCKBYBRANCHRESPONSE']._serialized_end=1807
+  _globals['_PRODUCTOSSERVICE']._serialized_start=1810
+  _globals['_PRODUCTOSSERVICE']._serialized_end=2939
 # @@protoc_insertion_point(module_scope)
