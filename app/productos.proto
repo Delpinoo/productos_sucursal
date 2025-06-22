@@ -1,53 +1,53 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto"; // Para la fecha de venta
+import "google/protobuf/timestamp.proto";
 
 package productos_service;
 
-// Mensaje para un Producto (Alineado con tu tabla 'productos' original)
+// Mensaje para un Producto
 message Producto {
   int32 id = 1;
   string nombre = 2;
-  string descripcion = 3; // Añadido 'descripcion'
-  bytes imagen = 4;       // Mantenido 'imagen'
+  string descripcion = 3;
+  bytes imagen = 4;
 }
 
-// Mensaje para una Sucursal (Alineado con tu tabla 'sucursales' original)
+// Mensaje para una Sucursal
 message Sucursal {
   int32 id = 1;
   string nombre = 2;
-  // string direccion = 3; // Eliminado 'direccion' para coincidir con tu esquema
+  string direccion = 3;
 }
 
-// Mensaje para el Stock de un Producto en una Sucursal específica (Alineado con tu tabla 'stock')
+// Mensaje para el Stock de un Producto en una Sucursal específica
 message StockProducto {
   int32 id = 1;
   int32 id_sucursal = 2;
   int32 id_producto = 3;
   int32 cantidad = 4;
-  double precio = 5; // Precio por producto en esta sucursal (DECIMAL en DB -> double en Protobuf)
+  double precio = 5;
 }
 
-// Mensaje para una Venta (Alineado con tu tabla 'ventas')
+// Mensaje para una Venta
 message Venta {
   int32 id = 1;
-  google.protobuf.Timestamp fecha = 2; // Usamos Timestamp para la fecha
-  double total_venta = 3;               // DECIMAL en DB -> double en Protobuf
+  google.protobuf.Timestamp fecha = 2;
+  double total_venta = 3;
   int32 id_sucursal = 4;
 }
 
-// Mensaje para los Detalles de Venta (Alineado con tu tabla 'detalles_venta')
+// Mensaje para los Detalles de Venta
 message DetalleVenta {
   int32 id = 1;
   int32 id_venta = 2;
   int32 id_producto = 3;
   int32 cantidad = 4;
-  double precio_unitario = 5; // DECIMAL en DB -> double en Protobuf
+  double precio_unitario = 5;
 }
 
 
-// Solicitudes y Respuestas para Productos (Ajustadas)
+// Solicitudes y Respuestas para Productos
 message CreateProductoRequest {
   string nombre = 1;
   string descripcion = 2;
@@ -69,10 +69,10 @@ message ListProductosResponse {
 }
 
 
-// Solicitudes y Respuestas para Sucursales (Ajustadas)
+// Solicitudes y Respuestas para Sucursales
 message CreateSucursalRequest {
   string nombre = 1;
-  // string direccion = 2; // Eliminado 'direccion' de la solicitud
+  string direccion = 2;
 }
 
 message SucursalResponse {
@@ -90,7 +90,7 @@ message ListSucursalesResponse {
 }
 
 
-// Solicitudes y Respuestas para Stock de Productos (Ajustadas para la nueva estructura 'StockProducto')
+// Solicitudes y Respuestas para Stock de Productos
 message AddStockRequest {
   int32 id_producto = 1;
   int32 id_sucursal = 2;
@@ -107,7 +107,7 @@ message UpdateStockRequest {
   int32 id_producto = 1;
   int32 id_sucursal = 2;
   int32 nueva_cantidad = 3;
-  double nuevo_precio = 4; // También se puede actualizar el precio del stock
+  double nuevo_precio = 4;
 }
 
 message GetStockRequest {
@@ -157,8 +157,4 @@ service ProductosService {
   rpc GetStock (GetStockRequest) returns (StockResponse);
   rpc ListStockByProduct (ListStockByProductRequest) returns (ListStockByProductResponse);
   rpc ListStockByBranch (ListStockByBranchRequest) returns (ListStockByBranchResponse);
-
-  // NOTA: RPCs para Ventas y Detalles de Venta se añadirán en futuras iteraciones.
-  // rpc CreateVenta (...) returns (...);
-  // rpc AddDetalleVenta (...) returns (...);
 }

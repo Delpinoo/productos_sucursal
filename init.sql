@@ -1,19 +1,28 @@
 -- init.sql
 -- Este script se ejecutará automáticamente cuando el contenedor de PostgreSQL se inicialice por primera vez.
 
+-- Limpiar tablas existentes para asegurar una inicialización limpia
+-- Considera si realmente quieres eliminar datos en cada inicio.
+-- Si no quieres perder datos en cada 'docker-compose up', omite estas líneas.
+DROP TABLE IF EXISTS detalles_venta;
+DROP TABLE IF EXISTS ventas;
+DROP TABLE IF EXISTS stock;
+DROP TABLE IF EXISTS productos;
+DROP TABLE IF EXISTS sucursales;
+
 -- Tabla para las sucursales
 CREATE TABLE IF NOT EXISTS sucursales (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(255) NOT NULL UNIQUE
-    -- 'direccion' se elimina para coincidir con tu query original
+    nombre VARCHAR(255) NOT NULL UNIQUE,
+    direccion VARCHAR(255)
 );
 
--- Tabla para los productos (modificada para incluir imagen y descripcion, pero no precio global)
+-- Tabla para los productos
 CREATE TABLE IF NOT EXISTS productos (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL UNIQUE,
     descripcion TEXT,
-    imagen BYTEA -- Añadido 'imagen' aquí según las métricas y uso previo.
+    imagen BYTEA
 );
 
 -- Tabla de cruce para el stock de productos en cada sucursal (con precio por sucursal)
@@ -22,7 +31,7 @@ CREATE TABLE IF NOT EXISTS stock (
     id_sucursal INTEGER REFERENCES sucursales(id) ON DELETE CASCADE,
     id_producto INTEGER REFERENCES productos(id) ON DELETE CASCADE,
     cantidad INTEGER NOT NULL DEFAULT 0,
-    precio DECIMAL(10, 2), -- Precio por producto en esta sucursal
+    precio DECIMAL(10, 2),
     UNIQUE (id_sucursal, id_producto)
 );
 
@@ -34,7 +43,7 @@ CREATE TABLE IF NOT EXISTS ventas (
     id_sucursal INTEGER REFERENCES sucursales(id) ON DELETE CASCADE
 );
 
--- Tabla para los detalles de cada venta (qué productos se vendieron)
+-- Tabla para los detalles de cada venta
 CREATE TABLE IF NOT EXISTS detalles_venta (
     id SERIAL PRIMARY KEY,
     id_venta INTEGER REFERENCES ventas(id) ON DELETE CASCADE,
@@ -44,35 +53,34 @@ CREATE TABLE IF NOT EXISTS detalles_venta (
 );
 
 
--- Opcional: Insertamos sucursales y productos (ajustado para ON CONFLICT)
--- Solo insertará si la fila no existe para evitar errores en recreaciones de Docker
-INSERT INTO sucursales (nombre) VALUES
-('Sucursal Centro') ON CONFLICT (nombre) DO NOTHING;
-INSERT INTO sucursales (nombre) VALUES
-('Sucursal Norte') ON CONFLICT (nombre) DO NOTHING;
-INSERT INTO sucursales (nombre) VALUES
-('Sucursal Sur') ON CONFLICT (nombre) DO NOTHING;
-INSERT INTO sucursales (nombre) VALUES
-('Sucursal Este') ON CONFLICT (nombre) DO NOTHING;
-INSERT INTO sucursales (nombre) VALUES
-('Sucursal Oeste') ON CONFLICT (nombre) DO NOTHING;
-INSERT INTO sucursales (nombre) VALUES
-('Sucursal General') ON CONFLICT (nombre) DO NOTHING; -- Asegura que la Sucursal General esté disponible
+-- Opcional: Insertamos sucursales y productos
+INSERT INTO sucursales (nombre, direccion) VALUES
+('Sucursal Centro', 'Avenida Central 123') ON CONFLICT (nombre) DO NOTHING;
+INSERT INTO sucursales (nombre, direccion) VALUES
+('Sucursal Norte', 'Calle del Sol 456') ON CONFLICT (nombre) DO NOTHING;
+INSERT INTO sucursales (nombre, direccion) VALUES
+('Sucursal Sur', 'Bulevar Luna 789') ON CONFLICT (nombre) DO NOTHING;
+INSERT INTO sucursales (nombre, direccion) VALUES
+('Sucursal Este', 'Camino del Este 101') ON CONFLICT (nombre) DO NOTHING;
+-- ¡Corregido! Ahora solo se inserta nombre y direccion, no descripcion e imagen
+INSERT INTO sucursales (nombre, direccion) VALUES
+('Sucursal Oeste', 'Ruta Oeste 202') ON CONFLICT (nombre) DO NOTHING;
+-- ¡Corregido! Ahora solo se inserta nombre y direccion, no descripcion e imagen
+INSERT INTO sucursales (nombre, direccion) VALUES
+('Sucursal General', 'Plaza Mayor 303') ON CONFLICT (nombre) DO NOTHING;
 
 INSERT INTO productos (nombre, descripcion, imagen) VALUES
-('Laptop Gamer', 'Laptop de alto rendimiento para juegos', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4944415478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
+('Laptop Gamer', 'Laptop de alto rendimiento para juegos', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4948445478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
 INSERT INTO productos (nombre, descripcion, imagen) VALUES
-('Monitor 27"', 'Monitor de 27 pulgadas con resolución Full HD', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4944415478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
+('Monitor 27"', 'Monitor de 27 pulgadas con resolución Full HD', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4948445478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
 INSERT INTO productos (nombre, descripcion, imagen) VALUES
-('Teclado Mecánico', 'Teclado mecánico retroiluminado RGB', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4944415478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
+('Teclado Mecánico', 'Teclado mecánico retroiluminado RGB', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4948445478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
 INSERT INTO productos (nombre, descripcion, imagen) VALUES
-('Mouse Inalámbrico', 'Mouse inalámbrico ergonómico con múltiples botones', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4944415478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
+('Mouse Inalámbrico', 'Mouse inalámbrico ergonómico con múltiples botones', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4948445478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
 INSERT INTO productos (nombre, descripcion, imagen) VALUES
-('Auriculares Gaming', 'Auriculares circumaurales con micrófono', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4948445478daedc10101000000c2a0f74f670000000049454e44ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
+('Auriculares Gaming', 'Auriculares circumaurales con micrófono', E'\\x89504e470d0a1a0a0000000d49484452000000100000001008060000001f15c489000000017352474200aece1ce90000000467414d410000b18f0bec000000097048597300000c0100000c0101283c009b0000000c4948445478daedc10101000000c2a0f74f670000000049454e4e64ae426082'::bytea) ON CONFLICT (nombre) DO NOTHING;
 
--- Insertar stock de ejemplo (ajustado para ON CONFLICT (id_sucursal, id_producto) DO UPDATE)
--- Utiliza subconsultas para obtener los IDs dinámicamente
-
+-- Insertar stock de ejemplo
 -- Para Sucursal Centro
 INSERT INTO stock (id_sucursal, id_producto, cantidad, precio) VALUES
 ((SELECT id FROM sucursales WHERE nombre = 'Sucursal Centro'), (SELECT id FROM productos WHERE nombre = 'Laptop Gamer'), 15, 1200.50) ON CONFLICT (id_sucursal, id_producto) DO UPDATE SET cantidad = EXCLUDED.cantidad, precio = EXCLUDED.precio;

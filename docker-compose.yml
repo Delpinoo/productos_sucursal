@@ -1,64 +1,48 @@
-# docker-compose.yml
+version: '3.8'
 
 services:
-  # Servicio para el proxy Envoy
-  envoy:
-    image: envoyproxy/envoy:v1.29.0
-    container_name: envoy_proxy
-    ports:
-      - "8080:8080" # Mapea el puerto 8080 interno de Envoy al 8080 del host
-      - "9901:9901" # Puerto de administración de Envoy
-    volumes:
-      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro # Monta el archivo de configuración de Envoy en modo de solo lectura
-    networks:
-      - app_network
-    command: "envoy -c /etc/envoy/envoy.yaml --log-level trace" # Nivel de log a TRACE
-    depends_on:
-      - grpc_server # Envoy depende del servidor gRPC
-
-  # Servicio para tu servidor gRPC en Python
-  grpc_server:
-    build:
-      context: . # El contexto de construcción es el directorio actual donde está docker-compose.yml
-      dockerfile: Dockerfile.grpc # Usa el Dockerfile específico para el servidor gRPC
-    container_name: python_grpc_server
-    ports:
-      - "50051:50051" # Expone el puerto 50051 del contenedor al puerto 50051 del host
-    networks:
-      - app_network
-    environment:
-      # Estas variables de entorno se pasan directamente al contenedor
-      DB_HOST: db # Apunta al nombre del servicio de la base de datos en Docker Compose
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_PORT: ${DB_PORT}
-    depends_on:
-      - db # El servidor gRPC depende del servicio 'db' (base de datos)
-    # El comando de ejecución del servidor gRPC será el definido por la instrucción CMD en Dockerfile.grpc.
-
-  # Servicio para la base de datos PostgreSQL
   db:
-    image: postgres:13 # Usa la imagen oficial de PostgreSQL versión 13
-    container_name: postgres_db
+    image: postgres:13-alpine
+    restart: always
     environment:
-      # Estas variables son para configurar el usuario y la base de datos iniciales de PostgreSQL.
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - db_data:/var/lib/postgresql/data # Persistencia de datos para la base de datos
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Monta el script de inicialización de la BD
     ports:
-      - "${DB_PORT}:${DB_PORT}" # Opcional: para acceder a la BD desde tu host
-    networks:
-      - app_network
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck: # Añadido healthcheck para la base de datos
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s # Espera 10 segundos antes de empezar a chequear
 
-# Definición de las redes de Docker para que los servicios puedan comunicarse
-networks:
-  app_network:
-    driver: bridge # Crea una red bridge interna
+  grpc_server:
+    build:
+      context: .
+      dockerfile: Dockerfile.grpc
+    restart: always
+    ports:
+      - "50051:50051"
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: 5432
+    depends_on:
+      db: # Depende de que 'db' esté sano
+        condition: service_healthy
+    volumes:
+      # Monta la carpeta 'app' de tu host en '/app' dentro del contenedor.
+      - ./app:/app
+      # ¡NUEVA LÍNEA CLAVE! Monta init.sql desde la raíz de tu host a /app/init.sql en el contenedor.
+      - ./init.sql:/app/init.sql
+    # El comando para ejecutar el servidor Python.
+    # Usamos '-u' para forzar la salida sin búfer, lo que ayuda a ver los logs en tiempo real.
+    command: python -u /app/app_grpc_server.py
 
-# Definición de volúmenes para la persistencia de datos
 volumes:
-  db_data: # Define el volumen para la persistencia de datos de PostgreSQL
+  postgres_data:

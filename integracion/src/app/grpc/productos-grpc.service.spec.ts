@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ProductsGrpcService } from './products-grpc.service';
+import { ProductosGrpcService } from './productos-grpc.service';
 
 describe('ProductsGrpcService', () => {
-  let service: ProductsGrpcService;
+  let service: ProductosGrpcService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(ProductsGrpcService);
+    service = TestBed.inject(ProductosGrpcService);
   });
 
   it('should be created', () => {

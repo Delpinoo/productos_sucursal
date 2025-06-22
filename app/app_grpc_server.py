@@ -8,7 +8,7 @@ from dotenv import load_dotenv, find_dotenv
 import traceback
 from datetime import datetime # Para manejar timestamps
 
-# Importar los archivos generados por protoc (Ajustado para nuevas estructuras)
+# Importar los archivos generados por protoc
 from productos_pb2 import (
     Producto, ProductoResponse, ListProductosResponse,
     Sucursal, SucursalResponse, ListSucursalesResponse,
@@ -16,7 +16,7 @@ from productos_pb2 import (
     CreateProductoRequest, GetProductoRequest,
     CreateSucursalRequest, GetSucursalRequest,
     AddStockRequest, RemoveStockRequest, UpdateStockRequest, GetStockRequest,
-    ListStockByProductRequest, ListStockByBranchRequest
+    ListStockByProductRequest, ListStockByProductResponse, ListStockByBranchRequest, ListStockByBranchResponse
 )
 from productos_pb2_grpc import ProductosServiceServicer, add_ProductosServiceServicer_to_server
 from google.protobuf.empty_pb2 import Empty
@@ -34,6 +34,7 @@ else:
 
 # --- INICIO DE DEPURACIÓN DE VARIABLES DE ENTORNO ---
 print("--- DEBUG: Valores de variables de entorno DISPONIBLES EN os.environ ---")
+# Usar comillas simples para las claves dentro de os.environ.get()
 print(f"DB_HOST: {os.environ.get('DB_HOST')}")
 print(f"DB_NAME: {os.environ.get('DB_NAME')}")
 print(f"DB_USER: {os.environ.get('DB_USER')}")
@@ -51,11 +52,11 @@ def get_db_connection(max_attempts=10, delay=5):
     attempt = 0
     while attempt < max_attempts:
         try:
-            hostname = os.environ.get('DB_HOST')
-            database = os.environ.get('DB_NAME')
-            username = os.environ.get('DB_USER')
-            password = os.environ.get('DB_PASSWORD')
-            port = os.environ.get('DB_PORT', '5432')
+            hostname = os.environ.get("DB_HOST")
+            database = os.environ.get("DB_NAME")
+            username = os.environ.get("DB_USER")
+            password = os.environ.get("DB_PASSWORD")
+            port = os.environ.get("DB_PORT", "5432")
 
             print(f"DEBUG: Intento {attempt + 1}/{max_attempts} - Conectando a DB: host={hostname}, db={database}, user={username}, port={port}")
             conn = psycopg2.connect(
@@ -97,7 +98,7 @@ class ProductosService(ProductosServiceServicer):
             cur.close()
             conn.close()
             if row:
-                imagen_data = bytes(row[3]) if isinstance(row[3], memoryview) else (row[3] if row[3] else b'')
+                imagen_data = bytes(row[3]) if isinstance(row[3], memoryview) else (row[3] if row[3] else b"")
                 return ProductoResponse(
                     producto=Producto(
                         id=row[0], nombre=row[1], descripcion=row[2], imagen=imagen_data
@@ -158,7 +159,7 @@ class ProductosService(ProductosServiceServicer):
             cur.close()
             conn.close()
             for row in rows:
-                imagen_data = bytes(row[3]) if isinstance(row[3], memoryview) else (row[3] if row[3] else b'')
+                imagen_data = bytes(row[3]) if isinstance(row[3], memoryview) else (row[3] if row[3] else b"")
                 productos_list.append(Producto(
                     id=row[0], nombre=row[1], descripcion=row[2], imagen=imagen_data
                 ))
@@ -170,7 +171,7 @@ class ProductosService(ProductosServiceServicer):
             context.set_details(f"Error interno del servidor: {e}")
             return ListProductosResponse()
 
-    # RPCs de Sucursales (AJUSTADAS)
+    # RPCs de Sucursales
     def CreateSucursal(self, request, context):
         conn = get_db_connection()
         if not conn:
@@ -179,16 +180,16 @@ class ProductosService(ProductosServiceServicer):
             return SucursalResponse()
         try:
             cur = conn.cursor()
-            # Solo inserta nombre
+            # Inserta nombre y direccion
             cur.execute(
-                "INSERT INTO sucursales (nombre) VALUES (%s) RETURNING id;",
-                (request.nombre,)
+                "INSERT INTO sucursales (nombre, direccion) VALUES (%s, %s) RETURNING id;",
+                (request.nombre, request.direccion)
             )
             new_id = cur.fetchone()[0]
             conn.commit()
             cur.close()
             conn.close()
-            created_sucursal = Sucursal(id=new_id, nombre=request.nombre) # Sin direccion
+            created_sucursal = Sucursal(id=new_id, nombre=request.nombre, direccion=request.direccion)
             return SucursalResponse(sucursal=created_sucursal, message="Sucursal creada exitosamente.", success=True)
         except Exception as e:
             conn.rollback()
@@ -206,14 +207,14 @@ class ProductosService(ProductosServiceServicer):
             return SucursalResponse()
         try:
             cur = conn.cursor()
-            # Solo selecciona nombre
-            cur.execute("SELECT id, nombre FROM sucursales WHERE id = %s", (request.id,))
+            # Selecciona nombre y direccion
+            cur.execute("SELECT id, nombre, direccion FROM sucursales WHERE id = %s", (request.id,))
             row = cur.fetchone()
             cur.close()
             conn.close()
             if row:
                 return SucursalResponse(
-                    sucursal=Sucursal(id=row[0], nombre=row[1]), # Sin direccion
+                    sucursal=Sucursal(id=row[0], nombre=row[1], direccion=row[2]),
                     message="Sucursal encontrada.", success=True
                 )
             else:
@@ -236,13 +237,13 @@ class ProductosService(ProductosServiceServicer):
         sucursales_list = []
         try:
             cur = conn.cursor()
-            # Solo selecciona nombre
-            cur.execute("SELECT id, nombre FROM sucursales ORDER BY id")
+            # Selecciona nombre y direccion
+            cur.execute("SELECT id, nombre, direccion FROM sucursales ORDER BY id")
             rows = cur.fetchall()
             cur.close()
             conn.close()
             for row in rows:
-                sucursales_list.append(Sucursal(id=row[0], nombre=row[1])) # Sin direccion
+                sucursales_list.append(Sucursal(id=row[0], nombre=row[1], direccion=row[2]))
             return ListSucursalesResponse(sucursales=sucursales_list)
         except Exception as e:
             print(f"ERROR al listar sucursales: {e}")
@@ -251,7 +252,7 @@ class ProductosService(ProductosServiceServicer):
             context.set_details(f"Error interno del servidor: {e}")
             return ListSucursalesResponse()
 
-    # RPCs de Stock (AJUSTADAS para la nueva estructura 'StockProducto')
+    # RPCs de Stock
     def AddStock(self, request, context):
         conn = get_db_connection()
         if not conn:
@@ -260,11 +261,10 @@ class ProductosService(ProductosServiceServicer):
             return StockResponse()
         try:
             cur = conn.cursor()
-            # Intenta insertar o actualizar el stock
             cur.execute(
                 """
                 INSERT INTO stock (id_producto, id_sucursal, cantidad, precio)
-                VALUES (%s, %s, %s, (SELECT precio FROM stock WHERE id_producto = %s AND id_sucursal = %s LIMIT 1)) -- Intenta mantener el precio existente o null
+                VALUES (%s, %s, %s, (SELECT precio FROM stock WHERE id_producto = %s AND id_sucursal = %s LIMIT 1))
                 ON CONFLICT (id_producto, id_sucursal) DO UPDATE SET cantidad = stock.cantidad + EXCLUDED.cantidad
                 RETURNING id, id_producto, id_sucursal, cantidad, precio;
                 """,
@@ -337,7 +337,6 @@ class ProductosService(ProductosServiceServicer):
             return StockResponse()
         try:
             cur = conn.cursor()
-            # Actualiza cantidad y precio
             cur.execute(
                 """
                 INSERT INTO stock (id_producto, id_sucursal, cantidad, precio)
@@ -374,7 +373,6 @@ class ProductosService(ProductosServiceServicer):
             return StockResponse()
         try:
             cur = conn.cursor()
-            # Selecciona todos los campos de stock
             cur.execute(
                 "SELECT id, id_producto, id_sucursal, cantidad, precio FROM stock WHERE id_producto = %s AND id_sucursal = %s",
                 (request.id_producto, request.id_sucursal)
@@ -410,7 +408,6 @@ class ProductosService(ProductosServiceServicer):
         stock_list = []
         try:
             cur = conn.cursor()
-            # Selecciona todos los campos de stock
             cur.execute(
                 "SELECT id, id_producto, id_sucursal, cantidad, precio FROM stock WHERE id_producto = %s ORDER BY id_sucursal",
                 (request.id_producto,)
@@ -464,7 +461,7 @@ class ProductosService(ProductosServiceServicer):
 def serve():
     server = grpc.server(ThreadPoolExecutor(max_workers=10))
     add_ProductosServiceServicer_to_server(ProductosService(), server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port("[::]:50051")
     print("INFO: Servidor gRPC iniciado en el puerto 50051.")
     server.start()
     try:
@@ -473,7 +470,7 @@ def serve():
     except KeyboardInterrupt:
         server.stop(0)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Antes de iniciar el servidor gRPC, intentamos sembrar la base de datos
     print("INFO: Intentando sembrar la base de datos...")
     conn = get_db_connection()
@@ -481,8 +478,8 @@ if __name__ == '__main__':
         try:
             cur = conn.cursor()
             # Ejecuta el script SQL completo de init.sql para crear tablas e insertar datos
-            # Lee el contenido del archivo init.sql
-            with open('./init.sql', 'r') as f:
+            # La ruta './init.sql' ahora es correcta porque init.sql se montará en /app/init.sql
+            with open("./init.sql", "r") as f:
                 sql_script = f.read()
             cur.execute(sql_script)
             conn.commit()

@@ -1,51 +1,53 @@
 # Dockerfile.grpc
 
-# Utiliza la imagen base de Python 3.10 slim (más pequeña y compatible)
 FROM python:3.10-slim-buster
 
-# Establece el directorio de trabajo base dentro del contenedor a /app.
-# Todos los COPY y RUN subsiguientes serán relativos a este directorio.
 WORKDIR /app
 
-# Copia solo el archivo requirements.txt desde tu carpeta 'app/' local
-# a la raíz del WORKDIR del contenedor (es decir, a /app/requirements.txt).
+# Copia requirements.txt desde app/ en el contexto de construcción a la raíz de /app en el contenedor
 COPY app/requirements.txt .
 
-# Instala las dependencias listadas en requirements.txt.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia TODO el contenido de la carpeta 'app/' local
-# (que ahora DEBE CONTENER productos.proto, app_grpc_server.py, __init__.py)
-# directamente a la raíz del WORKDIR del contenedor (/app/).
-COPY app/ .
+# Instala curl para descargar los archivos .proto de Google
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Copia el archivo .env desde la raíz de tu proyecto local a la raíz del WORKDIR del contenedor (/app/.env).
-COPY .env .
+# Crea la estructura de directorios para los archivos .proto de Google
+RUN mkdir -p google/protobuf/
 
-# --- PASO DE DEPURACIÓN EN CONSTRUCCIÓN (se mantienen para verificación) ---
-# Listar el contenido del directorio /app ANTES de la generación de protobuf.
-# Estos comandos se ejecutarán durante la fase de 'Building' del docker compose.
-RUN echo "--- Contenido de /app antes de protoc (tras COPY) ---" && ls -l /app
+# Descarga los archivos .proto de Google necesarios
+RUN curl -o google/protobuf/empty.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/empty.proto
+RUN curl -o google/protobuf/timestamp.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/timestamp.proto
 
-# Generar los archivos _pb2.py y _pb2_grpc.py dentro del contenedor.
-# Como productos.proto ahora está directamente en /app, el comando es directo.
+# Copia tu archivo productos.proto desde app/ en el contexto de construcción a la raíz de /app en el contenedor
+COPY app/productos.proto .
+
+# Genera los archivos Python de Protobuf
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. productos.proto
 
-# Listar el contenido del directorio /app DESPUÉS de la generación de protobuf.
-RUN echo "--- Contenido de /app después de protoc (tras generación) ---" && ls -l /app
+# Mueve los archivos generados a la subcarpeta 'app' dentro del WORKDIR del contenedor
+# Esto es crucial para que Python los encuentre como 'app.productos_pb2', etc.
+RUN mkdir -p app
+RUN mv productos_pb2.py ./app/
+RUN mv productos_pb2_grpc.py ./app/
+RUN mv productos.proto ./app/
 
-# Prueba de importación durante la construcción para confirmar la generación.
-# Si esto falla, el problema es durante la construcción de la imagen.
-RUN python -c "import productos_pb2; import productos_pb2_grpc; print('Protobuf files imported successfully during build time.')"
-# --- FIN PASOS DE DEPURACIÓN EN CONSTRUCCIÓN ---
+# Copia el servidor gRPC y el archivo __init__.py desde app/ en el host a /app/app en el contenedor
+COPY app/app_grpc_server.py ./app/
+COPY app/__init__.py ./app/
 
-# Añade el WORKDIR (/app) al PYTHONPATH del contenedor. Esto es crucial.
+# Copia el archivo .env desde la raíz del contexto de construcción a la raíz de /app en el contenedor
+COPY .env .
+
+# La línea 'COPY init.sql .' ha sido eliminada de aquí.
+# Ahora init.sql se montará directamente mediante docker-compose.yml.
+
+# Establece la variable de entorno PYTHONPATH para que Python encuentre los módulos en /app
 ENV PYTHONPATH=/app
 
-# --- LÓGICA DE EJECUCIÓN DEL SERVIDOR (simplificada y directa) ---
-# Define el comando para ejecutar el servidor gRPC.
-# Ejecutamos el archivo directamente con 'python' ya que /app está en PYTHONPATH.
-CMD ["python", "app_grpc_server.py"]
-
-# Expon el puerto donde el servidor gRPC escuchará las conexiones.
+# Expone el puerto que usará el servidor gRPC
 EXPOSE 50051
+
+# Comando para ejecutar el servidor gRPC al iniciar el contenedor
+# Usa '-m app.app_grpc_server' para ejecutarlo como un módulo, lo que ayuda con la resolución de rutas internas.
+CMD ["python", "-u", "app.app_grpc_server"]
