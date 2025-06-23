@@ -10,7 +10,7 @@ message Producto {
   int32 id = 1;
   string nombre = 2;
   string descripcion = 3;
-  bytes imagen = 4;
+  bytes imagen = 4; // Imagen en formato base64 (o binario directo)
 }
 
 // Mensaje para una Sucursal
@@ -48,10 +48,14 @@ message DetalleVenta {
 
 
 // Solicitudes y Respuestas para Productos
+// --- CAMBIO GRANDE AQUÍ: CreateProductoRequest incluye datos para stock inicial ---
 message CreateProductoRequest {
   string nombre = 1;
   string descripcion = 2;
   bytes imagen = 3;
+  int32 id_sucursal_inicial = 4; // La sucursal a la que se asignará el stock inicial
+  int32 cantidad_inicial = 5;    // La cantidad inicial de stock
+  double precio_inicial = 6;     // El precio inicial de este producto en esa sucursal
 }
 
 message ProductoResponse {
@@ -64,8 +68,23 @@ message GetProductoRequest {
   int32 id = 1;
 }
 
+message SearchProductosRequest {
+  string query = 1; // Un campo para el término de búsqueda
+}
+
 message ListProductosResponse {
   repeated Producto productos = 1;
+}
+
+message UpdateProductoRequest {
+  int32 id = 1;
+  string nombre = 2;
+  string descripcion = 3;
+  bytes imagen = 4; // La imagen puede ser actualizada
+}
+
+message DeleteProductoRequest {
+  int32 id = 1;
 }
 
 
@@ -140,17 +159,23 @@ message ListStockByBranchResponse {
 
 // Definición del servicio gRPC
 service ProductosService {
-  // RPCs para Productos
+  // RPCs para Productos (TODO ESTO VA POR gRPC)
   rpc CreateProducto (CreateProductoRequest) returns (ProductoResponse);
   rpc GetProducto (GetProductoRequest) returns (ProductoResponse);
   rpc ListProductos (google.protobuf.Empty) returns (ListProductosResponse);
+  rpc UpdateProducto (UpdateProductoRequest) returns (ProductoResponse);
+  rpc DeleteProducto (DeleteProductoRequest) returns (google.protobuf.Empty);
+  rpc SearchProductos (SearchProductosRequest) returns (ListProductosResponse);
 
-  // RPCs para Sucursales
+
+  // RPCs para Sucursales (Se mantienen definidos en .proto pero NO se implementan en este servidor gRPC,
+  // la API REST se encarga de estos por ahora. Si el profesor lo pide, se añaden más adelante)
   rpc CreateSucursal (CreateSucursalRequest) returns (SucursalResponse);
   rpc GetSucursal (GetSucursalRequest) returns (SucursalResponse);
   rpc ListSucursales (google.protobuf.Empty) returns (ListSucursalesResponse);
 
-  // RPCs para Stock de Productos
+  // RPCs para Stock de Productos (Se mantienen definidos en .proto pero NO se implementan en este servidor gRPC
+  // de forma general, solo la inicialización en CreateProducto. La API REST gestiona esto por ahora.)
   rpc AddStock (AddStockRequest) returns (StockResponse);
   rpc RemoveStock (RemoveStockRequest) returns (StockResponse);
   rpc UpdateStock (UpdateStockRequest) returns (StockResponse);

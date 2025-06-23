@@ -1,299 +1,466 @@
-    import grpc
-    from concurrent import futures
-    import time
-    import os
-    import psycopg2
-    from psycopg2 import sql
-    from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-    import logging
+# -*- coding: utf-8 -*-
+import grpc
+from concurrent import futures
+import time
+import os
+import psycopg2
+from psycopg2 import sql
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import logging
+from decimal import Decimal # Importar Decimal
 
-    # Configuración de logging
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s - %(message)s')
+# Configuración de logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-    # Importa los módulos generados por protobuf
-    import app.productos_pb2 as productos_pb2
-    import app.productos_pb2_grpc as productos_pb2_grpc
-    import google.protobuf.empty_pb2 as empty_pb2
+# Importa los módulos generados por protobuf
+import productos_pb2 as productos_pb2
+import productos_pb2_grpc as productos_pb2_grpc
+import google.protobuf.empty_pb2 as empty_pb2
 
-    # Configuración de la base de datos
-    DB_HOST = os.getenv('DB_HOST', 'localhost')
-    DB_NAME = os.getenv('DB_NAME', 'productos_db')
-    DB_USER = os.getenv('DB_USER', 'user')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
-    DB_PORT = os.getenv('DB_PORT', '5432')
+# Configuración de la base de datos
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_NAME = os.getenv('DB_NAME', 'productos_db')
+DB_USER = os.getenv('DB_USER', 'user')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
+DB_PORT = os.getenv('DB_PORT', '5432')
 
-    def get_db_connection():
-        """Establece y retorna una conexión a la base de datos."""
-        conn = None
-        retries = 10 # Aumentar reintentos para dar más tiempo a la DB
-        retry_delay = 3 # Retraso de 3 segundos entre reintentos
-        while retries > 0:
-            try:
-                logging.info(f"Intentando conectar a la base de datos en {DB_HOST}:{DB_PORT}/{DB_NAME}...")
-                conn = psycopg2.connect(
-                    host=DB_HOST,
-                    database=DB_NAME,
-                    user=DB_USER,
-                    password=DB_PASSWORD,
-                    port=DB_PORT
-                )
-                logging.info("Conexión a la base de datos exitosa.")
-                return conn
-            except psycopg2.OperationalError as e:
-                logging.error(f"Error al conectar a la base de datos: {e}")
-                retries -= 1
-                if retries > 0:
-                    logging.info(f"Reintentando en {retry_delay} segundos... ({retries} intentos restantes)")
-                    time.sleep(retry_delay)
-                else:
-                    logging.error("No se pudo conectar a la base de datos después de varios intentos.")
-                    raise
-            return conn
-
-    def create_database_and_table():
-        """Crea la base de datos y la tabla de productos si no existen."""
-        # Conectar a la base de datos por defecto (postgres) para crear la nueva DB
-        conn_no_db = None
-        # Mismos reintentos que para la conexión general
-        retries = 10
-        retry_delay = 3
-        while retries > 0:
-            try:
-                logging.info(f"Intentando conectar a PostgreSQL en {DB_HOST}:{DB_PORT} para crear la base de datos {DB_NAME}...")
-                conn_no_db = psycopg2.connect(
-                    host=DB_HOST,
-                    database='postgres',
-                    user=DB_USER,
-                    password=DB_PASSWORD,
-                    port=DB_PORT
-                )
-                conn_no_db.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-                cursor_no_db = conn_no_db.cursor()
-
-                # Verificar si la base de datos existe
-                cursor_no_db.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = %s"), [DB_NAME])
-                if not cursor_no_db.fetchone():
-                    logging.info(f"Creando la base de datos: {DB_NAME}")
-                    cursor_no_db.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(DB_NAME)))
-                    logging.info(f"Base de datos {DB_NAME} creada exitosamente.")
-                else:
-                    logging.info(f"La base de datos {DB_NAME} ya existe.")
-
-                cursor_no_db.close()
-                break # Salir del bucle si la conexión es exitosa
-            except psycopg2.OperationalError as e:
-                logging.error(f"Error al conectar a PostgreSQL para crear la base de datos: {e}")
-                retries -= 1
-                if retries > 0:
-                    logging.info(f"Reintentando en {retry_delay} segundos... ({retries} intentos restantes)")
-                    time.sleep(retry_delay)
-                else:
-                    logging.error("No se pudo conectar a PostgreSQL para crear la base de datos después de varios intentos.")
-                    raise
-            finally:
-                if conn_no_db:
-                    conn_no_db.close()
-
-        # Conectar a la base de datos específica para crear la tabla y sembrar datos
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
+def get_db_connection():
+    """Establece y retorna una conexión a la base de datos."""
+    conn = None
+    retries = 10 
+    retry_delay = 3 
+    while retries > 0:
         try:
-            # Crear la tabla si no existe
+            logging.info(f"Intentando conectar a la base de datos en {DB_HOST}:{DB_PORT}/{DB_NAME}")
+            conn = psycopg2.connect(
+                host=DB_HOST,
+                database=DB_NAME,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                port=DB_PORT
+            )
+            logging.info("Conexión a la base de datos establecida exitosamente.")
+            return conn
+        except psycopg2.OperationalError as e:
+            logging.error(f"Error de conexión a la base de datos: {e}. Reintentando en {retry_delay} segundos...")
+            retries -= 1
+            time.sleep(retry_delay)
+    logging.error("No se pudo establecer conexión con la base de datos después de varios reintentos.")
+    return None
+
+def create_database_and_table():
+    """Crea la base de datos y la tabla de productos si no existen."""
+    temp_conn = None
+    try:
+        # Conectar a la base de datos 'postgres' para crear la DB si no existe
+        temp_conn = psycopg2.connect(
+            host=DB_HOST,
+            database='postgres', 
+            user=DB_USER,
+            password=DB_PASSWORD,
+            port=DB_PORT
+        )
+        temp_conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        cursor = temp_conn.cursor()
+
+        # Verificar si la base de datos existe, si no, crearla
+        cursor.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = %s"), [DB_NAME])
+        if not cursor.fetchone():
+            logging.info(f"Base de datos '{DB_NAME}' no existe. Creándola...")
+            cursor.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(DB_NAME)))
+            logging.info(f"Base de datos '{DB_NAME}' creada.")
+        else:
+            logging.info(f"Base de datos '{DB_NAME}' ya existe.")
+        cursor.close()
+    except Exception as e:
+        logging.error(f"Error al verificar/crear la base de datos: {e}")
+        if temp_conn:
+            temp_conn.close()
+        return
+
+    finally:
+        if temp_conn:
+            temp_conn.close()
+
+    # Ahora conectar a la base de datos específica para crear las tablas
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+            # --- CAMBIO: Ajustar la creación de la tabla productos para coincidir con init.sql y .proto ---
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS productos (
                     id SERIAL PRIMARY KEY,
-                    nombre VARCHAR(255) NOT NULL,
+                    nombre VARCHAR(255) NOT NULL UNIQUE,
                     descripcion TEXT,
-                    precio DECIMAL(10, 2) NOT NULL,
-                    stock INTEGER NOT NULL
+                    imagen BYTEA
                 );
             """)
-            conn.commit()
-            logging.info("Tabla 'productos' verificada/creada exitosamente.")
+            # Se asume que sucursales, stock, ventas, detalles_venta son creadas por init.sql
+            # Si este servidor fuera el único punto de inicialización, deberían crearse aquí también.
 
-            # Verificar si la tabla está vacía y sembrar datos si es necesario
-            cursor.execute("SELECT COUNT(*) FROM productos;")
+            conn.commit()
+            logging.info("Tabla 'productos' verificada/creada.")
+
+            # Sembrar datos iniciales si la tabla está vacía (opcional, init.sql ya hace esto)
+            cursor.execute("SELECT COUNT(*) FROM productos")
             if cursor.fetchone()[0] == 0:
-                logging.info("Sembrando datos iniciales en la tabla 'productos'...")
+                logging.info("Tabla 'productos' está vacía. Insertando datos de ejemplo...")
                 cursor.execute("""
-                    INSERT INTO productos (nombre, descripcion, precio, stock) VALUES
-                    ('Laptop Dell XPS 15', 'Potente laptop con pantalla InfinityEdge', 1800.00, 50),
-                    ('Monitor Ultrawide LG', 'Monitor de 34 pulgadas para productividad', 450.00, 120),
-                    ('Teclado Mecánico HyperX', 'Teclado para gaming con switches rojos', 120.00, 200),
-                    ('Mouse Logitech MX Master 3', 'Mouse ergonómico avanzado para profesionales', 99.99, 150),
-                    ('Auriculares Sony WH-1000XM4', 'Auriculares con cancelación de ruido líder', 279.00, 80);
+                    INSERT INTO productos (nombre, descripcion, imagen) VALUES
+                    ('Laptop Gamer', 'Potente laptop para juegos de última generación.', NULL),
+                    ('Monitor 27"', 'Monitor de alta resolución para productividad y juegos.', NULL),
+                    ('Teclado Mecánico', 'Teclado con switches mecánicos y retroiluminación RGB.', NULL),
+                    ('Mouse Inalámbrico', 'Mouse ergonómico con batería de larga duración.', NULL);
                 """)
                 conn.commit()
-                logging.info("Datos iniciales sembrados exitosamente.")
+                logging.info("Datos de ejemplo insertados en 'productos'.")
             else:
-                logging.info("La tabla 'productos' ya contiene datos, no se sembrarán datos iniciales.")
+                logging.info("Tabla 'productos' ya contiene datos.")
 
-        except Exception as e:
-            logging.error(f"Error al crear tabla o sembrar datos: {e}")
+    except Exception as e:
+        logging.error(f"Error al crear tablas o insertar datos: {e}")
+        if conn:
             conn.rollback()
-            raise
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+class ProductosService(productos_pb2_grpc.ProductosServiceServicer):
+    def GetProducto(self, request, context):
+        conn = get_db_connection()
+        if not conn:
+            context.set_details('No se pudo conectar a la base de datos')
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return productos_pb2.ProductoResponse(success=False, message="Database unavailable")
+
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT id, nombre, descripcion, imagen FROM productos WHERE id = %s", (request.id,))
+            row = cursor.fetchone()
+            if row:
+                producto = productos_pb2.Producto(
+                    id=row[0],
+                    nombre=row[1],
+                    descripcion=row[2],
+                    imagen=row[3] if row[3] else b'' 
+                )
+                return productos_pb2.ProductoResponse(
+                    producto=producto,
+                    message="Producto encontrado",
+                    success=True
+                )
+            else:
+                context.set_details('Producto no encontrado')
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                return productos_pb2.ProductoResponse(success=False, message="Producto no encontrado")
+        except Exception as e:
+            logging.error(f"Error al obtener producto: {e}")
+            context.set_details(f'Error interno del servidor: {e}')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return productos_pb2.ProductoResponse(success=False, message="Internal server error")
         finally:
             cursor.close()
             conn.close()
 
-    class ProductosService(productos_pb2_grpc.ProductosServiceServicer):
-        """Implementa los métodos del servicio gRPC de productos."""
+    def SearchProductos(self, request, context):
+        conn = get_db_connection()
+        if not conn:
+            context.set_details('No se pudo conectar a la base de datos')
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return productos_pb2.ListProductosResponse() 
 
-        def GetProducto(self, request, context):
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute("SELECT id, nombre, descripcion, precio, stock FROM productos WHERE id = %s", (request.id,))
-                row = cursor.fetchone()
-                if row:
-                    logging.info(f"Producto encontrado: ID {row[0]}, Nombre {row[1]}")
-                    return productos_pb2.Producto(
+        cursor = conn.cursor()
+        productos = []
+        try:
+            query_sql = """
+                SELECT id, nombre, descripcion, imagen
+                FROM productos
+                WHERE nombre ILIKE %s OR descripcion ILIKE %s;
+            """
+            search_term = f"%{request.query}%"
+            cursor.execute(query_sql, (search_term, search_term))
+            rows = cursor.fetchall()
+
+            for row in rows:
+                productos.append(
+                    productos_pb2.Producto(
                         id=row[0],
                         nombre=row[1],
                         descripcion=row[2],
-                        precio=float(row[3]),
-                        stock=row[4]
+                        imagen=row[3] if row[3] else b''
                     )
-                else:
-                    logging.warning(f"Producto no encontrado: ID {request.id}")
-                    context.set_details('Producto no encontrado')
-                    context.set_code(grpc.StatusCode.NOT_FOUND)
-                    return productos_pb2.Producto()
-            except Exception as e:
-                logging.error(f"Error al obtener producto: {e}")
-                context.set_details(f'Error interno del servidor: {e}')
-                context.set_code(grpc.StatusCode.INTERNAL)
-                return productos_pb2.Producto()
-            finally:
-                cursor.close()
-                conn.close()
+                )
+            return productos_pb2.ListProductosResponse(productos=productos)
+        except Exception as e:
+            logging.error(f"Error al buscar productos: {e}")
+            context.set_details(f'Error interno del servidor: {e}')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return productos_pb2.ListProductosResponse()
+        finally:
+            cursor.close()
+            conn.close()
 
-        def SearchProductos(self, request, context):
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            try:
-                query = "SELECT id, nombre, descripcion, precio, stock FROM productos WHERE nombre ILIKE %s OR descripcion ILIKE %s"
-                search_term = f"%{request.query}%"
-                cursor.execute(query, (search_term, search_term))
-                rows = cursor.fetchall()
-                productos = []
-                for row in rows:
-                    productos.append(productos_pb2.Producto(
+    def CreateProducto(self, request, context):
+        conn = get_db_connection()
+        if not conn:
+            context.set_details('No se pudo conectar a la base de datos')
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return productos_pb2.ProductoResponse(success=False, message="Database unavailable")
+
+        cursor = conn.cursor()
+        try:
+            # 1. Insertar el nuevo producto
+            cursor.execute(
+                "INSERT INTO productos (nombre, descripcion, imagen) VALUES (%s, %s, %s) RETURNING id",
+                (request.nombre, request.descripcion, request.imagen)
+            )
+            producto_id = cursor.fetchone()[0]
+            logging.info(f"Producto {request.nombre} creado con ID: {producto_id}")
+
+            # 2. Insertar el stock inicial para la sucursal especificada
+            # --- CAMBIO: Validar que la sucursal inicial exista ---
+            cursor.execute("SELECT id FROM sucursales WHERE id = %s", (request.id_sucursal_inicial,))
+            if not cursor.fetchone():
+                conn.rollback()
+                context.set_details('La sucursal inicial especificada no existe.')
+                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+                return productos_pb2.ProductoResponse(success=False, message="La sucursal inicial no existe.")
+
+            # --- CAMBIO: Validar cantidades y precios iniciales (mayor que cero) ---
+            if request.cantidad_inicial < 0:
+                conn.rollback()
+                context.set_details('La cantidad inicial no puede ser negativa.')
+                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+                return productos_pb2.ProductoResponse(success=False, message="La cantidad inicial no puede ser negativa.")
+            
+            if request.precio_inicial <= 0: 
+                conn.rollback()
+                context.set_details('El precio inicial debe ser mayor que cero.')
+                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+                return productos_pb2.ProductoResponse(success=False, message="El precio inicial debe ser mayor que cero.")
+
+            # --- CAMBIO: Insertar/Actualizar en la tabla stock ---
+            cursor.execute(
+                """
+                INSERT INTO stock (id_sucursal, id_producto, cantidad, precio)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (id_sucursal, id_producto) DO UPDATE
+                SET cantidad = EXCLUDED.cantidad, precio = EXCLUDED.precio;
+                """,
+                (request.id_sucursal_inicial, producto_id, request.cantidad_inicial, Decimal(str(request.precio_inicial)))
+            )
+            conn.commit()
+            logging.info(f"Stock inicial de {request.cantidad_inicial} para producto {producto_id} en sucursal {request.id_sucursal_inicial} con precio {request.precio_inicial} asignado.")
+
+
+            new_producto = productos_pb2.Producto(
+                id=producto_id,
+                nombre=request.nombre,
+                descripcion=request.descripcion,
+                imagen=request.imagen
+            )
+            return productos_pb2.ProductoResponse(
+                producto=new_producto,
+                message="Producto creado y stock inicial asignado exitosamente",
+                success=True
+            )
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            context.set_details('El nombre del producto ya existe.')
+            context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+            return productos_pb2.ProductoResponse(success=False, message="El nombre del producto ya existe")
+        except Exception as e:
+            logging.error(f"Error al crear producto y/o asignar stock inicial: {e}")
+            conn.rollback()
+            context.set_details(f'Error interno del servidor: {e}')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return productos_pb2.ProductoResponse(success=False, message="Internal server error")
+        finally:
+            cursor.close()
+            conn.close()
+
+    def UpdateProducto(self, request, context):
+        conn = get_db_connection()
+        if not conn:
+            context.set_details('No se pudo conectar a la base de datos')
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return productos_pb2.ProductoResponse(success=False, message="Database unavailable")
+
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT id FROM productos WHERE id = %s", (request.id,))
+            if not cursor.fetchone():
+                context.set_details('Producto no encontrado')
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                return productos_pb2.ProductoResponse(success=False, message="Producto no encontrado")
+
+            cursor.execute(
+                """
+                UPDATE productos
+                SET nombre = %s, descripcion = %s, imagen = %s
+                WHERE id = %s
+                """,
+                (request.nombre, request.descripcion, request.imagen, request.id)
+            )
+            conn.commit()
+
+            updated_producto = productos_pb2.Producto(
+                id=request.id,
+                nombre=request.nombre,
+                descripcion=request.descripcion,
+                imagen=request.imagen
+            )
+            return productos_pb2.ProductoResponse(
+                producto=updated_producto,
+                message="Producto actualizado exitosamente",
+                success=True
+            )
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            context.set_details('El nombre del producto ya existe.')
+            context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+            return productos_pb2.ProductoResponse(success=False, message="El nombre del producto ya existe")
+        except Exception as e:
+            logging.error(f"Error al actualizar producto: {e}")
+            conn.rollback()
+            context.set_details(f'Error interno del servidor: {e}')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return productos_pb2.ProductoResponse(success=False, message="Internal server error")
+        finally:
+            cursor.close()
+            conn.close()
+
+    def DeleteProducto(self, request, context):
+        conn = get_db_connection()
+        if not conn:
+            context.set_details('No se pudo conectar a la base de datos')
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return empty_pb2.Empty()
+
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM productos WHERE id = %s RETURNING id", (request.id,))
+            deleted_id = cursor.fetchone()
+            conn.commit()
+            if deleted_id:
+                logging.info(f"Producto con ID {request.id} eliminado.")
+                return empty_pb2.Empty()
+            else:
+                logging.warning(f"Intento de eliminar producto no existente con ID {request.id}")
+                context.set_details('Producto no encontrado')
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                return empty_pb2.Empty()
+        except Exception as e:
+            logging.error(f"Error al eliminar producto: {e}")
+            conn.rollback()
+            context.set_details(f'Error interno del servidor: {e}')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return empty_pb2.Empty()
+        finally:
+            cursor.close()
+            conn.close()
+
+    def ListProductos(self, request, context):
+        conn = get_db_connection()
+        if not conn:
+            context.set_details('No se pudo conectar a la base de datos')
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return productos_pb2.ListProductosResponse()
+
+        cursor = conn.cursor()
+        productos = []
+        try:
+            cursor.execute("SELECT id, nombre, descripcion, imagen FROM productos")
+            rows = cursor.fetchall()
+            for row in rows:
+                productos.append(
+                    productos_pb2.Producto(
                         id=row[0],
                         nombre=row[1],
                         descripcion=row[2],
-                        precio=float(row[3]),
-                        stock=row[4]
-                    ))
-                logging.info(f"Búsqueda de productos '{request.query}' completada, {len(productos)} resultados.")
-                return productos_pb2.SearchProductosResponse(productos=productos)
-            except Exception as e:
-                logging.error(f"Error al buscar productos: {e}")
-                context.set_details(f'Error interno del servidor: {e}')
-                context.set_code(grpc.StatusCode.INTERNAL)
-                return productos_pb2.SearchProductosResponse()
-            finally:
-                cursor.close()
-                conn.close()
-
-        def CreateProducto(self, request, context):
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    """INSERT INTO productos (nombre, descripcion, precio, stock) VALUES (%s, %s, %s, %s) RETURNING id;""",
-                    (request.nombre, request.descripcion, request.precio, request.stock)
+                        imagen=row[3] if row[3] else b'' 
+                    )
                 )
-                producto_id = cursor.fetchone()[0]
-                conn.commit()
-                logging.info(f"Producto creado: ID {producto_id}, Nombre {request.nombre}")
-                return productos_pb2.Producto(
-                    id=producto_id,
-                    nombre=request.nombre,
-                    descripcion=request.descripcion,
-                    precio=request.precio,
-                    stock=request.stock
-                )
-            except Exception as e:
-                logging.error(f"Error al crear producto: {e}")
-                context.set_details(f'Error interno del servidor: {e}')
-                context.set_code(grpc.StatusCode.INTERNAL)
-                return productos_pb2.Producto()
-            finally:
-                cursor.close()
-                conn.close()
-
-        def UpdateProducto(self, request, context):
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    """UPDATE productos SET nombre = %s, descripcion = %s, precio = %s, stock = %s WHERE id = %s RETURNING id;""",
-                    (request.nombre, request.descripcion, request.precio, request.stock, request.id)
-                )
-                if cursor.rowcount == 0:
-                    logging.warning(f"Producto no encontrado para actualizar: {request.id}")
-                    context.set_details('Producto no encontrado')
-                    context.set_code(grpc.StatusCode.NOT_FOUND)
-                    return productos_pb2.Producto()
-                conn.commit()
-                logging.info(f"Producto actualizado: ID {request.id}, Nombre {request.nombre}")
-                return request
-            except Exception as e:
-                logging.error(f"Error al actualizar producto: {e}")
-                context.set_details(f'Error interno del servidor: {e}')
-                context.set_code(grpc.StatusCode.INTERNAL)
-                return productos_pb2.Producto()
-            finally:
-                cursor.close()
-                conn.close()
-
-        def DeleteProducto(self, request, context):
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute("DELETE FROM productos WHERE id = %s RETURNING id;", (request.id,))
-                if cursor.rowcount == 0:
-                    logging.warning(f"Producto no encontrado para eliminar: {request.id}")
-                    context.set_details('Producto no encontrado')
-                    context.set_code(grpc.StatusCode.NOT_FOUND)
-                    return empty_pb2.Empty()
-                conn.commit()
-                logging.info(f"Producto eliminado: ID {request.id}")
-                return empty_pb2.Empty()
-            except Exception as e:
-                logging.error(f"Error al eliminar producto: {e}")
-                context.set_details(f'Error interno del servidor: {e}')
-                context.set_code(grpc.StatusCode.INTERNAL)
-                return empty_pb2.Empty()
-            finally:
-                cursor.close()
-                conn.close()
-
-    def serve():
-        # Primero, asegúrate de que la base de datos y la tabla existan y estén sembradas
-        logging.info("Iniciando proceso de creación de base de datos y tabla...")
-        try:
-            create_database_and_table()
-            logging.info("Base de datos y tabla preparadas.")
+            return productos_pb2.ListProductosResponse(productos=productos)
         except Exception as e:
-            logging.critical(f"Fallo crítico al preparar la base de datos: {e}")
-            raise
+            logging.error(f"Error al listar productos: {e}")
+            context.set_details(f'Error interno del servidor: {e}')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return productos_pb2.ListProductosResponse()
+        finally:
+            cursor.close()
+            conn.close()
 
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        productos_pb2_grpc.add_ProductosServiceServicer_to_server(ProductosService(), server)
-        server.add_insecure_port('[::]:50051')
-        logging.info("Servidor gRPC escuchando en el puerto 50051...")
-        server.start()
-        try:
-            while True:
-                time.sleep(86400)
-        except KeyboardInterrupt:
-            logging.info("Deteniendo servidor gRPC.")
-            server.stop(0)
+    # Los RPCs de Sucursales y Stock NO están implementados en este servidor gRPC.
+    # La API REST se encarga de ellos por ahora, o se implementarían aquí si se requiriera en el futuro.
+    def CreateSucursal(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.SucursalResponse(success=False, message="Método no implementado")
 
-    if __name__ == '__main__':
-        serve()
-    
+    def GetSucursal(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.SucursalResponse(success=False, message="Método no implementado")
+
+    def ListSucursales(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.ListSucursalesResponse()
+
+    def AddStock(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.StockResponse(success=False, message="Método no implementado")
+
+    def RemoveStock(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.StockResponse(success=False, message="Método no implementado")
+
+    def UpdateStock(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.StockResponse(success=False, message="Método no implementado")
+
+    def GetStock(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.StockResponse(success=False, message="Método no implementado")
+
+    def ListStockByProduct(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.ListStockByProductResponse()
+
+    def ListStockByBranch(self, request, context):
+        context.set_details('Método no implementado en este servicio gRPC.')
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return productos_pb2.ListStockByBranchResponse()
+
+
+def serve():
+    """Función principal que inicia el servidor gRPC."""
+    logging.info("Creando base de datos y tablas si es necesario...")
+    create_database_and_table() 
+
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    productos_pb2_grpc.add_ProductosServiceServicer_to_server(ProductosService(), server)
+    server.add_insecure_port('[::]:50051')
+    logging.info("Servidor gRPC iniciado y escuchando en el puerto 50051...")
+    server.start()
+    try:
+        while True:
+            time.sleep(86400)  # Mantener vivo el servidor
+    except KeyboardInterrupt:
+        logging.info("Servidor gRPC detenido por el usuario.")
+        server.stop(0)
+
+
+if __name__ == '__main__':
+    serve()

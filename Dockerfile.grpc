@@ -2,52 +2,62 @@
 
 FROM python:3.10-slim-buster
 
-WORKDIR /app
+# Establecer el WORKDIR en el directorio raíz para controlar mejor la estructura de archivos
+WORKDIR /
 
-# Copia requirements.txt desde app/ en el contexto de construcción a la raíz de /app en el contenedor
-COPY app/requirements.txt .
+# Crear la estructura de directorios necesaria: /app/app
+RUN mkdir -p /app/app
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Copiar requirements.txt a /app/requirements.txt
+COPY app/requirements.txt /app/requirements.txt
 
-# Instala curl para descargar los archivos .proto de Google
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Instalar herramientas para la limpieza y diagnóstico, incluyendo 'file' explícitamente
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl dos2unix file && \
+    rm -rf /var/lib/apt/lists/*
 
-# Crea la estructura de directorios para los archivos .proto de Google
-RUN mkdir -p google/protobuf/
+# Instalar dependencias de Python
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Descarga los archivos .proto de Google necesarios
-RUN curl -o google/protobuf/empty.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/empty.proto
-RUN curl -o google/protobuf/timestamp.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/timestamp.proto
+# PASO DE DIAGNÓSTICO: Verificar si grpcio-tools se instaló correctamente
+RUN pip show grpcio-tools
 
-# Copia tu archivo productos.proto desde app/ en el contexto de construcción a la raíz de /app en el contenedor
-COPY app/productos.proto .
+# Crear la estructura de directorios para los archivos .proto de Google
+RUN mkdir -p /google/protobuf/
 
-# Genera los archivos Python de Protobuf
-RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. productos.proto
+# Descargar los archivos .proto de Google necesarios
+RUN curl -o /google/protobuf/empty.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/empty.proto
+RUN curl -o /google/protobuf/timestamp.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/timestamp.proto
 
-# Mueve los archivos generados a la subcarpeta 'app' dentro del WORKDIR del contenedor
-# Esto es crucial para que Python los encuentre como 'app.productos_pb2', etc.
-RUN mkdir -p app
-RUN mv productos_pb2.py ./app/
-RUN mv productos_pb2_grpc.py ./app/
-RUN mv productos.proto ./app/
+# --- Nuevo: Copiar productos.proto a un directorio accesible para la generación ---
+COPY app/productos.proto /app/productos.proto
 
-# Copia el servidor gRPC y el archivo __init__.py desde app/ en el host a /app/app en el contenedor
-COPY app/app_grpc_server.py ./app/
-COPY app/__init__.py ./app/
+# --- Generar los stubs de gRPC en /app/app/ ---
+# Esto genera productos_pb2.py y productos_pb2_grpc.py en /app/app/
+RUN python -m grpc_tools.protoc \
+    -I/app \
+    -I/google/protobuf \
+    --python_out=/app/app \
+    --grpc_python_out=/app/app \
+    /app/productos.proto
 
-# Copia el archivo .env desde la raíz del contexto de construcción a la raíz de /app en el contenedor
-COPY .env .
+# --- ZONA CRÍTICA: Copiar app_grpc_server.py y realizar SOLO limpieza básica ---
+# Copia el archivo desde el host.
+COPY app/app_grpc_server.py /app/app/app_grpc_server.py
 
-# La línea 'COPY init.sql .' ha sido eliminada de aquí.
-# Ahora init.sql se montará directamente mediante docker-compose.yml.
+# Limpieza de BOM y CRLF solamente. NO SE TOCA LA INDENTACIÓN.
+RUN echo "Limpiando app_grpc_server.py (removiendo BOM y CRLF)..." && \
+    dos2unix /app/app/app_grpc_server.py && \
+    sed -i '1s/^\xef\xbb\xbf//' /app/app/app_grpc_server.py && \
+    chmod +x /app/app/app_grpc_server.py && \
+    echo "Verificando app_grpc_server.py después de la limpieza (file, hexdump, py_compile):" && \
+    file /app/app/app_grpc_server.py && \
+    echo "Primeras 10 líneas con hexdump:" && \
+    hexdump -C /app/app/app_grpc_server.py | head -n 10 && \
+    echo "Últimas 10 líneas con hexdump (para verificar fin de archivo):" && \
+    hexdump -C /app/app/app_grpc_server.py | tail -n 10 && \
+    echo "Prueba de sintaxis de Python:" && \
+    python -m py_compile /app/app/app_grpc_server.py || exit 1
 
-# Establece la variable de entorno PYTHONPATH para que Python encuentre los módulos en /app
-ENV PYTHONPATH=/app
-
-# Expone el puerto que usará el servidor gRPC
-EXPOSE 50051
-
-# Comando para ejecutar el servidor gRPC al iniciar el contenedor
-# Usa '-m app.app_grpc_server' para ejecutarlo como un módulo, lo que ayuda con la resolución de rutas internas.
-CMD ["python", "-u", "app.app_grpc_server"]
+# Comando para ejecutar el servidor gRPC
+# ENTRYPOINT ["python", "-u", "/app/app/app_grpc_server.py"] # Ya está definido en docker-compose

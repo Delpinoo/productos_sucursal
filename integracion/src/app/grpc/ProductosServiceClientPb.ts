@@ -169,6 +169,135 @@ export class ProductosServiceClient {
     this.methodDescriptorListProductos);
   }
 
+  methodDescriptorUpdateProducto = new grpcWeb.MethodDescriptor(
+    '/productos_service.ProductosService/UpdateProducto',
+    grpcWeb.MethodType.UNARY,
+    productos_pb.UpdateProductoRequest,
+    productos_pb.ProductoResponse,
+    (request: productos_pb.UpdateProductoRequest) => {
+      return request.serializeBinary();
+    },
+    productos_pb.ProductoResponse.deserializeBinary
+  );
+
+  updateProducto(
+    request: productos_pb.UpdateProductoRequest,
+    metadata?: grpcWeb.Metadata | null): Promise<productos_pb.ProductoResponse>;
+
+  updateProducto(
+    request: productos_pb.UpdateProductoRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: productos_pb.ProductoResponse) => void): grpcWeb.ClientReadableStream<productos_pb.ProductoResponse>;
+
+  updateProducto(
+    request: productos_pb.UpdateProductoRequest,
+    metadata?: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: productos_pb.ProductoResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/productos_service.ProductosService/UpdateProducto',
+        request,
+        metadata || {},
+        this.methodDescriptorUpdateProducto,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/productos_service.ProductosService/UpdateProducto',
+    request,
+    metadata || {},
+    this.methodDescriptorUpdateProducto);
+  }
+
+  methodDescriptorDeleteProducto = new grpcWeb.MethodDescriptor(
+    '/productos_service.ProductosService/DeleteProducto',
+    grpcWeb.MethodType.UNARY,
+    productos_pb.DeleteProductoRequest,
+    google_protobuf_empty_pb.Empty,
+    (request: productos_pb.DeleteProductoRequest) => {
+      return request.serializeBinary();
+    },
+    google_protobuf_empty_pb.Empty.deserializeBinary
+  );
+
+  deleteProducto(
+    request: productos_pb.DeleteProductoRequest,
+    metadata?: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
+
+  deleteProducto(
+    request: productos_pb.DeleteProductoRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
+
+  deleteProducto(
+    request: productos_pb.DeleteProductoRequest,
+    metadata?: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/productos_service.ProductosService/DeleteProducto',
+        request,
+        metadata || {},
+        this.methodDescriptorDeleteProducto,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/productos_service.ProductosService/DeleteProducto',
+    request,
+    metadata || {},
+    this.methodDescriptorDeleteProducto);
+  }
+
+  methodDescriptorSearchProductos = new grpcWeb.MethodDescriptor(
+    '/productos_service.ProductosService/SearchProductos',
+    grpcWeb.MethodType.UNARY,
+    productos_pb.SearchProductosRequest,
+    productos_pb.ListProductosResponse,
+    (request: productos_pb.SearchProductosRequest) => {
+      return request.serializeBinary();
+    },
+    productos_pb.ListProductosResponse.deserializeBinary
+  );
+
+  searchProductos(
+    request: productos_pb.SearchProductosRequest,
+    metadata?: grpcWeb.Metadata | null): Promise<productos_pb.ListProductosResponse>;
+
+  searchProductos(
+    request: productos_pb.SearchProductosRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: productos_pb.ListProductosResponse) => void): grpcWeb.ClientReadableStream<productos_pb.ListProductosResponse>;
+
+  searchProductos(
+    request: productos_pb.SearchProductosRequest,
+    metadata?: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: productos_pb.ListProductosResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/productos_service.ProductosService/SearchProductos',
+        request,
+        metadata || {},
+        this.methodDescriptorSearchProductos,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/productos_service.ProductosService/SearchProductos',
+    request,
+    metadata || {},
+    this.methodDescriptorSearchProductos);
+  }
+
   methodDescriptorCreateSucursal = new grpcWeb.MethodDescriptor(
     '/productos_service.ProductosService/CreateSucursal',
     grpcWeb.MethodType.UNARY,

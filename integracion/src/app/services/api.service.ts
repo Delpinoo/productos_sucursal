@@ -40,4 +40,13 @@ export class ApiService {
     // cuando se usa FormData. HttpClient lo hace automáticamente con el boundary correcto.
     return this.http.post<any>(`${this.apiUrl}/venta`, formData);
   }
+
+  getSucursales(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/sucursales`);
+  }
+
+  getDolarValue(): Observable<any> {
+    return this.http.get<any>(`https://www.dolarsi.com/api/api.php?type=valoresprincipales`); // Example for an external API
+  }
+
 }

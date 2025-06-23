@@ -8,6 +8,9 @@ const routes: Routes = [
 
   {path: '', component: PaginaVentaComponent},
   {path: 'lista-producto', component: ListaProductosComponent},
+  { path: 'productos', component: ListaProductosComponent },
+  { path: 'venta', component: PaginaVentaComponent },
+  { path: '', redirectTo: '/productos', pathMatch: 'full' },
 
 ];
 

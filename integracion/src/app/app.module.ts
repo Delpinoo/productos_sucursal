@@ -12,13 +12,14 @@ import { ListaSucursalesComponent } from './pages/lista-sucursales/lista-sucursa
 import { SelectorSucursalComponent } from './pages/selector-sucursal/selector-sucursal.component';
 import { PaginaVentaComponent } from './pages/pagina-venta/pagina-venta.component';
 import { DetalleProductoComponent } from './pages/detalle-producto/detalle-producto.component';
+import { RouterModule } from '@angular/router'; // Importa RouterModule
 
 @NgModule({
   declarations: [ AppComponent,                
                   StockSucursalComponent,
                   SelectorSucursalComponent,
                   ],
-  imports: [ BrowserModule, AppRoutingModule, ListaProductosComponent, BuscadorComponent, HttpClientModule, ListaSucursalesComponent, DetalleProductoComponent, FormularioVentaComponent],
+  imports: [ BrowserModule, AppRoutingModule, ListaProductosComponent, BuscadorComponent, HttpClientModule, ListaSucursalesComponent, DetalleProductoComponent, FormularioVentaComponent,RouterModule,],
   providers: [],
   bootstrap: [AppComponent]
 })

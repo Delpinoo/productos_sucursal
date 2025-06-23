@@ -12,20 +12,18 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck: # Añadido healthcheck para la base de datos
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
-      start_period: 10s # Espera 10 segundos antes de empezar a chequear
+      start_period: 10s
 
-  grpc_server:
+  grpc_server: # Nombre del servicio gRPC
     build:
       context: .
-      dockerfile: Dockerfile.grpc
+      dockerfile: Dockerfile.grpc # Apuntando a Dockerfile.grpc
     restart: always
-    ports:
-      - "50051:50051"
     environment:
       DB_HOST: db
       DB_NAME: ${DB_NAME}
@@ -33,16 +31,24 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_PORT: 5432
     depends_on:
-      db: # Depende de que 'db' esté sano
+      db:
         condition: service_healthy
     volumes:
-      # Monta la carpeta 'app' de tu host en '/app' dentro del contenedor.
-      - ./app:/app
-      # ¡NUEVA LÍNEA CLAVE! Monta init.sql desde la raíz de tu host a /app/init.sql en el contenedor.
-      - ./init.sql:/app/init.sql
-    # El comando para ejecutar el servidor Python.
-    # Usamos '-u' para forzar la salida sin búfer, lo que ayuda a ver los logs en tiempo real.
-    command: python -u /app/app_grpc_server.py
+      # ¡IMPORTANTE! Asegúrate de que no haya un volumen que monte ./app a /app
+      - ./.env:/app/.env # Solo el .env
+    command: python -u /app/app/app_grpc_server.py # Ruta correcta al script
+
+  envoy:
+    image: envoyproxy/envoy:v1.22.0
+    restart: always
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    ports:
+      - "8080:8080"
+      - "9901:9901"
+    depends_on:
+      grpc_server: # Depende del servicio gRPC
+        condition: service_started
 
 volumes:
   postgres_data:

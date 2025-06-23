@@ -51,6 +51,21 @@ class ProductosServiceStub(object):
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=productos__pb2.ListProductosResponse.FromString,
                 _registered_method=True)
+        self.UpdateProducto = channel.unary_unary(
+                '/productos_service.ProductosService/UpdateProducto',
+                request_serializer=productos__pb2.UpdateProductoRequest.SerializeToString,
+                response_deserializer=productos__pb2.ProductoResponse.FromString,
+                _registered_method=True)
+        self.DeleteProducto = channel.unary_unary(
+                '/productos_service.ProductosService/DeleteProducto',
+                request_serializer=productos__pb2.DeleteProductoRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.SearchProductos = channel.unary_unary(
+                '/productos_service.ProductosService/SearchProductos',
+                request_serializer=productos__pb2.SearchProductosRequest.SerializeToString,
+                response_deserializer=productos__pb2.ListProductosResponse.FromString,
+                _registered_method=True)
         self.CreateSucursal = channel.unary_unary(
                 '/productos_service.ProductosService/CreateSucursal',
                 request_serializer=productos__pb2.CreateSucursalRequest.SerializeToString,
@@ -103,7 +118,7 @@ class ProductosServiceServicer(object):
     """
 
     def CreateProducto(self, request, context):
-        """RPCs para Productos
+        """RPCs para Productos (TODO ESTO VA POR gRPC)
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -121,8 +136,27 @@ class ProductosServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UpdateProducto(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteProducto(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SearchProductos(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def CreateSucursal(self, request, context):
-        """RPCs para Sucursales
+        """RPCs para Sucursales (Se mantienen definidos en .proto pero NO se implementan en este servidor gRPC,
+        la API REST se encarga de estos por ahora. Si el profesor lo pide, se añaden más adelante)
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -141,7 +175,8 @@ class ProductosServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def AddStock(self, request, context):
-        """RPCs para Stock de Productos
+        """RPCs para Stock de Productos (Se mantienen definidos en .proto pero NO se implementan en este servidor gRPC
+        de forma general, solo la inicialización en CreateProducto. La API REST gestiona esto por ahora.)
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -193,6 +228,21 @@ def add_ProductosServiceServicer_to_server(servicer, server):
             'ListProductos': grpc.unary_unary_rpc_method_handler(
                     servicer.ListProductos,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=productos__pb2.ListProductosResponse.SerializeToString,
+            ),
+            'UpdateProducto': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateProducto,
+                    request_deserializer=productos__pb2.UpdateProductoRequest.FromString,
+                    response_serializer=productos__pb2.ProductoResponse.SerializeToString,
+            ),
+            'DeleteProducto': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteProducto,
+                    request_deserializer=productos__pb2.DeleteProductoRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'SearchProductos': grpc.unary_unary_rpc_method_handler(
+                    servicer.SearchProductos,
+                    request_deserializer=productos__pb2.SearchProductosRequest.FromString,
                     response_serializer=productos__pb2.ListProductosResponse.SerializeToString,
             ),
             'CreateSucursal': grpc.unary_unary_rpc_method_handler(
@@ -322,6 +372,87 @@ class ProductosService(object):
             target,
             '/productos_service.ProductosService/ListProductos',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            productos__pb2.ListProductosResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateProducto(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/UpdateProducto',
+            productos__pb2.UpdateProductoRequest.SerializeToString,
+            productos__pb2.ProductoResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteProducto(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/DeleteProducto',
+            productos__pb2.DeleteProductoRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SearchProductos(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/productos_service.ProductosService/SearchProductos',
+            productos__pb2.SearchProductosRequest.SerializeToString,
             productos__pb2.ListProductosResponse.FromString,
             options,
             channel_credentials,

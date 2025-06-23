@@ -1,7 +1,22 @@
-<h2>Lista de Productos</h2>
-<ul>
-  <li *ngFor="let producto of productos">
-    Nombre: {{ producto.nombre }} - Descripción: {{ producto.descripcion }}
-    <small>(ID: {{ producto.id }})</small>
-  </li>
-</ul>
+<div *ngIf="productos && productos.length > 0">
+  <div *ngFor="let productoActual of productos">
+    <h2>Stock y Opciones de Venta para {{ productoActual.nombre }}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Sucursal</th>
+          <th>Cantidad</th>
+          <th>Precio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let stock of productoActual.stock_productos">
+          <td>{{ getNombreSucursal(stock.idSucursal) }}</td> <td>{{ stock.cantidad }}</td> <td>{{ obtenerPrecioEnDolar(productoActual) | currency:'USD':'symbol':'1.2-2' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+</div>
+<div *ngIf="!productos || productos.length === 0">
+  <p>No se encontraron productos.</p>
+</div>
